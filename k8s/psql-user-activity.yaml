@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-user-activity-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-user-activity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-user-activity
+  template:
+    metadata:
+      labels:
+        app: postgres-user-activity
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          env:
+            - name: POSTGRES_USER
+              value: $POSTGRESQL_USER_ACTIVITY_ROOT_USER
+            - name: POSTGRES_PASSWORD
+              value: $POSTGRESQL_USER_ACTIVITY_ROOT_PASSWORD
+            - name: POSTGRES_DB
+              value: $POSTGRESQL_USER_ACTIVITY_DB
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: postgres-user-activity-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-user-activity-service
+spec:
+  selector:
+    app: postgres-user-activity
+  ports:
+    - protocol: TCP
+      name: db
+      port: $POSTGRESQL_USER_ACTIVITY_PORT
+      targetPort: 5432
+  type: NodePort
+

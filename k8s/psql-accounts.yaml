@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-accounts-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-accounts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-accounts
+  template:
+    metadata:
+      labels:
+        app: postgres-accounts
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          env:
+            - name: POSTGRES_USER
+              value: $POSTGRESQL_ACCOUNT_ROOT_USER
+            - name: POSTGRES_PASSWORD
+              value: $POSTGRESQL_ACCOUNT_ROOT_PASSWORD
+            - name: POSTGRES_DB
+              value: $POSTGRESQL_ACCOUNT_DB
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: postgres-accounts-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-accounts-service
+spec:
+  selector:
+    app: postgres-accounts
+  ports:
+    - protocol: TCP
+      name: db
+      port: $POSTGRESQL_ACCOUNT_PORT
+      targetPort: 5432
+  type: NodePort
+
