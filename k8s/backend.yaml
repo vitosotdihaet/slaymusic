@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: it-project-music-streaming-service-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: it-project-music-streaming-service-backend
+  template:
+    metadata:
+      labels:
+        app: it-project-music-streaming-service-backend
+    spec:
+      containers:
+        - name: it-project-music-streaming-service-backend
+          image: it-project-music-streaming-service-backend:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MINIO_ROOT_USER
+              value: "$MINIO_ROOT_USER"
+            - name: MINIO_ROOT_PASSWORD
+              value: "$MINIO_ROOT_PASSWORD"
+            - name: MINIO_PORT
+              value: "$MINIO_PORT"
+            - name: MINIO_WEBUI_PORT
+              value: "$MINIO_WEBUI_PORT"
+            - name: POSTGRESQL_ACCOUNT_ROOT_USER
+              value: "$POSTGRESQL_ACCOUNT_ROOT_USER"
+            - name: POSTGRESQL_ACCOUNT_ROOT_PASSWORD
+              value: "$POSTGRESQL_ACCOUNT_ROOT_PASSWORD"
+            - name: POSTGRESQL_ACCOUNT_DB
+              value: "$POSTGRESQL_ACCOUNT_DB"
+            - name: POSTGRESQL_ACCOUNT_PORT
+              value: "$POSTGRESQL_ACCOUNT_PORT"
+            - name: POSTGRESQL_MUSIC_ROOT_USER
+              value: "$POSTGRESQL_MUSIC_ROOT_USER"
+            - name: POSTGRESQL_MUSIC_ROOT_PASSWORD
+              value: "$POSTGRESQL_MUSIC_ROOT_PASSWORD"
+            - name: POSTGRESQL_MUSIC_DB
+              value: "$POSTGRESQL_MUSIC_DB"
+            - name: POSTGRESQL_MUSIC_PORT
+              value: "$POSTGRESQL_MUSIC_PORT"
+            - name: POSTGRESQL_USER_ACTIVITY_ROOT_USER
+              value: "$POSTGRESQL_USER_ACTIVITY_ROOT_USER"
+            - name: POSTGRESQL_USER_ACTIVITY_ROOT_PASSWORD
+              value: "$POSTGRESQL_USER_ACTIVITY_ROOT_PASSWORD"
+            - name: POSTGRESQL_USER_ACTIVITY_DB
+              value: "$POSTGRESQL_USER_ACTIVITY_DB"
+            - name: POSTGRESQL_USER_ACTIVITY_PORT
+              value: "$POSTGRESQL_USER_ACTIVITY_PORT"
+
