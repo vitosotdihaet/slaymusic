@@ -38,6 +38,9 @@ spec:
           volumeMounts:
             - name: storage
               mountPath: /data
+          ports:
+            - containerPort: 9100
+            - containerPort: 9101
       volumes:
         - name: storage
           persistentVolumeClaim:
@@ -60,3 +63,4 @@ spec:
       port: $MINIO_WEBUI_PORT
       targetPort: 9001
   type: NodePort
+
