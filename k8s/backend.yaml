@@ -49,4 +49,16 @@ spec:
               value: "$POSTGRESQL_USER_ACTIVITY_DB"
             - name: POSTGRESQL_USER_ACTIVITY_PORT
               value: "$POSTGRESQL_USER_ACTIVITY_PORT"
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: it-project-music-streaming-service-backend
+spec:
+  selector:
+    app: it-project-music-streaming-service-backend
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: NodePort
