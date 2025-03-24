@@ -41,7 +41,7 @@ spec:
       volumes:
         - name: storage
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: postgres-music-pvc
 ---
 apiVersion: v1
 kind: Service
