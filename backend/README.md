@@ -1,13 +1,23 @@
-# Запуск
-
-# Сборка докер образа
+# Запуск minicube
 
 ```bash
-docker build -t it-project-music-streaming-service-backend:latest .
+minikube start --driver=docker
 ```
 
-# Загрузка image в кубы
+# Запуск tilt
 
 ```bash
-minikube image load it-project-music-streaming-service-backend:latest
+tilt up
+```
+
+# Остановка minikube
+
+```bash
+minikube stop
+```
+
+# Удаление всех ресурсов tilt
+
+```bash
+tilt down
 ```

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: it-project-music-streaming-service-backend
-          image: it-project-music-streaming-service-backend:latest
+          image: it-project-music-streaming-service-backend-image
           imagePullPolicy: IfNotPresent
           env:
             - name: MINIO_ROOT_USER

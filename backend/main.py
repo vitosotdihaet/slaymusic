@@ -1,19 +1,27 @@
-from fastapi import APIRouter, FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse
 from minio import Minio
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
 
-router = APIRouter()
+class Settings(BaseSettings):
+    minio_port: str 
+    minio_root_user: str  
+    minio_root_password: str  
 
-# MinIO server details
-minio_endpoint = "minio-service:9100"
-minio_access_key = "admin"
-minio_secret_key = "password"
+    @field_validator("*", mode="before")
+    def strip_strings(cls, v):
+        if isinstance(v, str):
+            return v.strip()
+        return v
 
-# Initialize MinIO client
+
+settings = Settings()
+
 minio_client = Minio(
-    minio_endpoint,
-    access_key=minio_access_key,
-    secret_key=minio_secret_key,
+    'minio-service:' + settings.minio_port,
+    access_key=settings.minio_root_user, 
+    secret_key=settings.minio_root_password,
     secure=False
 )
 app = FastAPI()
@@ -48,4 +56,4 @@ async def play_music(request: Request):
             'Content-Range': f'bytes {start}-{end}/{file_byte_size}',
             'Content-Length': str(content_length),
         }
-    )
+    )  
