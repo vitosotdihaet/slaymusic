@@ -5,7 +5,7 @@ def make_port_forward(var):
 allow_k8s_contexts('minikube')
 
 env_vars = dict()
-for line in str(read_file('.env')).split('\n'):
+for line in str(read_file('.env')).splitlines():
     if line.strip() and not line.startswith('#'):
         key, value = line.strip().split('=', 1)
         env_vars[key] = value
@@ -21,7 +21,6 @@ yaml_files = [
 for file in yaml_files:
     yaml_content = str(read_file(file))
     for key, value in env_vars.items():
-        yaml_content = yaml_content.replace('${%s}' % key, value)
         yaml_content = yaml_content.replace('$%s' % key, value)
     k8s_yaml(blob(yaml_content))
 
