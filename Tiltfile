@@ -22,7 +22,7 @@ for file in yaml_files:
     k8s_yaml(blob(yaml_content))
 
 # Set up port forwarding
-k8s_resource( 
+k8s_resource(
     'it-project-music-streaming-service-backend',
     port_forwards=['8000:8000'],
 )
@@ -30,7 +30,7 @@ k8s_resource(
 k8s_resource(
     'minio',
     port_forwards=['9101:9001']
-) 
+)
 
 # Docker build configuration
 docker_build(
@@ -39,7 +39,7 @@ docker_build(
     dockerfile='./backend/dockerfile',
     live_update=[
         sync('backend/main.py', '/app/main.py'),
-        run('cd /app && pip install -r requirements.txt', 
+        run('cd /app && pip install -r requirements.txt',
             trigger='./backend/requirements.txt'),
     ]
 )
