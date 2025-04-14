@@ -1,3 +1,7 @@
+def make_port_forward(var):
+    return env_vars[var]+':'+env_vars[var]
+
+
 allow_k8s_contexts('minikube')
 
 env_vars = dict()
@@ -24,12 +28,16 @@ for file in yaml_files:
 # Set up port forwarding
 k8s_resource(
     'it-project-music-streaming-service-backend',
-    port_forwards=['8000:8000'],
+    port_forwards=[
+        make_port_forward('BACKEND_PORT')
+    ],
 )
 
 k8s_resource(
     'minio',
-    port_forwards=['9101:9001']
+    port_forwards=[
+        env_vars['MINIO_WEBUI_PORT']+':9001'
+    ]
 )
 
 # Docker build configuration
