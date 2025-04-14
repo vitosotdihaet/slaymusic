@@ -59,6 +59,6 @@ spec:
     app: it-project-music-streaming-service-backend
   ports:
     - protocol: TCP
-      port: 8000
+      port: $BACKEND_PORT
       targetPort: 8000
   type: NodePort
