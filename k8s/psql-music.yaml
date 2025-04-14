@@ -56,4 +56,3 @@ spec:
       port: $POSTGRESQL_MUSIC_PORT
       targetPort: 5432
   type: NodePort
-

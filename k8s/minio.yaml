@@ -63,4 +63,3 @@ spec:
       port: $MINIO_WEBUI_PORT
       targetPort: 9001
   type: NodePort
-

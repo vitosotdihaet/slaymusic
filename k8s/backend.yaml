@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: it-project-music-streaming-service-backend
-          image: it-project-music-streaming-service-backend:latest
+          image: it-project-music-streaming-service-backend-image
           imagePullPolicy: IfNotPresent
           env:
             - name: MINIO_ROOT_USER
@@ -49,4 +49,16 @@ spec:
               value: "$POSTGRESQL_USER_ACTIVITY_DB"
             - name: POSTGRESQL_USER_ACTIVITY_PORT
               value: "$POSTGRESQL_USER_ACTIVITY_PORT"
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: it-project-music-streaming-service-backend
+spec:
+  selector:
+    app: it-project-music-streaming-service-backend
+  ports:
+    - protocol: TCP
+      port: $BACKEND_PORT
+      targetPort: 8000
+  type: NodePort

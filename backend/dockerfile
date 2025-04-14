@@ -1,5 +1,10 @@
-FROM python:3.9-slim-buster
+FROM python:3.12.1-slim-bullseye
 
-COPY main.py /app/
+WORKDIR /app
 
-CMD ["python", "/app/main.py"]
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY main.py .
+
+CMD ["python3", "-u", "main.py"]
