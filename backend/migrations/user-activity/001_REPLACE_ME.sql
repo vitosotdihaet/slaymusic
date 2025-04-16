@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS Testik (
+    Bebra INT NOT NULL
+);
