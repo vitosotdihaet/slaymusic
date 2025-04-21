@@ -29,7 +29,7 @@ k8s_resource(
     'it-project-music-streaming-service-backend',
     port_forwards=[
         make_port_forward('BACKEND_PORT')
-    ],
+    ]
 )
 
 k8s_resource(

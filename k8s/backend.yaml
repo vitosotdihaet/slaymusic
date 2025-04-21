@@ -25,14 +25,14 @@ spec:
               value: "$MINIO_PORT"
             - name: MINIO_WEBUI_PORT
               value: "$MINIO_WEBUI_PORT"
-            - name: POSTGRESQL_ACCOUNT_ROOT_USER
-              value: "$POSTGRESQL_ACCOUNT_ROOT_USER"
-            - name: POSTGRESQL_ACCOUNT_ROOT_PASSWORD
-              value: "$POSTGRESQL_ACCOUNT_ROOT_PASSWORD"
-            - name: POSTGRESQL_ACCOUNT_DB
-              value: "$POSTGRESQL_ACCOUNT_DB"
-            - name: POSTGRESQL_ACCOUNT_PORT
-              value: "$POSTGRESQL_ACCOUNT_PORT"
+            - name: POSTGRESQL_ACCOUNTS_ROOT_USER
+              value: "$POSTGRESQL_ACCOUNTS_ROOT_USER"
+            - name: POSTGRESQL_ACCOUNTS_ROOT_PASSWORD
+              value: "$POSTGRESQL_ACCOUNTS_ROOT_PASSWORD"
+            - name: POSTGRESQL_ACCOUNTS_DB
+              value: "$POSTGRESQL_ACCOUNTS_DB"
+            - name: POSTGRESQL_ACCOUNTS_PORT
+              value: "$POSTGRESQL_ACCOUNTS_PORT"
             - name: POSTGRESQL_MUSIC_ROOT_USER
               value: "$POSTGRESQL_MUSIC_ROOT_USER"
             - name: POSTGRESQL_MUSIC_ROOT_PASSWORD
