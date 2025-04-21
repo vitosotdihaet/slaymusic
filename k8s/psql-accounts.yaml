@@ -28,11 +28,11 @@ spec:
           image: postgres:15
           env:
             - name: POSTGRES_USER
-              value: $POSTGRESQL_ACCOUNT_ROOT_USER
+              value: $POSTGRESQL_ACCOUNTS_ROOT_USER
             - name: POSTGRES_PASSWORD
-              value: $POSTGRESQL_ACCOUNT_ROOT_PASSWORD
+              value: $POSTGRESQL_ACCOUNTS_ROOT_PASSWORD
             - name: POSTGRES_DB
-              value: $POSTGRESQL_ACCOUNT_DB
+              value: $POSTGRESQL_ACCOUNTS_DB
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -53,6 +53,6 @@ spec:
   ports:
     - protocol: TCP
       name: db
-      port: $POSTGRESQL_ACCOUNT_PORT
+      port: $POSTGRESQL_ACCOUNTS_PORT
       targetPort: 5432
   type: NodePort

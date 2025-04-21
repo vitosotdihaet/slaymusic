@@ -29,7 +29,7 @@ k8s_resource(
     'it-project-music-streaming-service-backend',
     port_forwards=[
         make_port_forward('BACKEND_PORT')
-    ],
+    ]
 )
 
 k8s_resource(
@@ -42,7 +42,7 @@ k8s_resource(
 # Docker build configuration
 docker_build(
     'it-project-music-streaming-service-backend-image',
-    './backend',
+    '.',
     dockerfile='./backend/dockerfile',
     live_update=[
         sync('backend/main.py', '/app/main.py'),
