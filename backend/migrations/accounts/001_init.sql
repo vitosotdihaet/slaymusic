@@ -40,4 +40,4 @@ CREATE TABLE IF NOT EXISTS analysts (
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_name ON users(name);
-CREATE INDEX IF NOT EXISTS idx_tracks_title ON tracks(title);
+-- CREATE INDEX IF NOT EXISTS idx_tracks_title ON tracks(title);
