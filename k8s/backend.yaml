@@ -49,6 +49,8 @@ spec:
               value: "$POSTGRESQL_USER_ACTIVITY_DB"
             - name: POSTGRESQL_USER_ACTIVITY_PORT
               value: "$POSTGRESQL_USER_ACTIVITY_PORT"
+            - name: BACKEND_PORT
+              value: "$BACKEND_PORT"
 ---
 apiVersion: v1
 kind: Service
