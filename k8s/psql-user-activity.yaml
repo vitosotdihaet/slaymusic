@@ -38,6 +38,31 @@ spec:
           volumeMounts:
             - name: storage
               mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - $POSTGRESQL_USER_ACTIVITY_ROOT_USER
+                - -d
+                - $POSTGRESQL_USER_ACTIVITY_DB
+                - -q
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - psql
+                - -U
+                - $POSTGRESQL_USER_ACTIVITY_ROOT_USER
+                - -d
+                - $POSTGRESQL_USER_ACTIVITY_DB
+                - -c
+                - "SELECT 1"
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 2
       volumes:
         - name: storage
           persistentVolumeClaim:

@@ -41,6 +41,20 @@ spec:
           ports:
             - containerPort: 9100
             - containerPort: 9101
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 2
       volumes:
         - name: storage
           persistentVolumeClaim:
