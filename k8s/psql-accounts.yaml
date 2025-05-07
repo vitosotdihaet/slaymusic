@@ -2,6 +2,8 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-accounts-pvc
+  annotations:
+    tilt.dev/down-policy: keep
 spec:
   accessModes:
     - ReadWriteOnce
@@ -47,9 +49,8 @@ spec:
                 - -d
                 - $POSTGRESQL_ACCOUNTS_DB
                 - -q
-            initialDelaySeconds: 15
             periodSeconds: 10
-            timeoutSeconds: 2
+            timeoutSeconds: 1
           readinessProbe:
             exec:
               command:
@@ -60,9 +61,20 @@ spec:
                 - $POSTGRESQL_ACCOUNTS_DB
                 - -c
                 - "SELECT 1"
-            initialDelaySeconds: 15
             periodSeconds: 10
-            timeoutSeconds: 2
+            timeoutSeconds: 1
+          startupProbe:
+            exec:
+              command:
+                - psql
+                - -U
+                - $POSTGRESQL_ACCOUNTS_ROOT_USER
+                - -d
+                - $POSTGRESQL_ACCOUNTS_DB
+                - -c
+                - "SELECT 1"
+            failureThreshold: 30
+            periodSeconds: 10
       volumes:
         - name: storage
           persistentVolumeClaim:
