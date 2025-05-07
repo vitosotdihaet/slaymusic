@@ -1,4 +1,3 @@
-from functools import lru_cache
 from pydantic_settings import BaseSettings
 
 
@@ -7,6 +6,8 @@ class Settings(BaseSettings):
     MINIO_ROOT_PASSWORD: str
     MINIO_PORT: int
     MINIO_WEBUI_PORT: int
+    MINIO_MUSIC_BUCKET: str
+    MINIO_COVER_BUCKET: str
 
     POSTGRESQL_ACCOUNTS_ROOT_USER: str
     POSTGRESQL_ACCOUNTS_ROOT_PASSWORD: str
@@ -26,10 +27,8 @@ class Settings(BaseSettings):
     BACKEND_PORT: int
 
     class Config:
-        env_file = '.env'
+        env_file = ".env"
         env_file_encoding = "utf-8"
 
 
-@lru_cache
-def get_environment_variables():
-    return Settings()  # type: ignore
+settings = Settings()

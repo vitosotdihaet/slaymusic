@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from depends import lifespan
+from configs.depends import lifespan
 from api.routers import music
 
 app = FastAPI(lifespan=lifespan)

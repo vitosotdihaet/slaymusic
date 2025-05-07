@@ -1,26 +1,7 @@
 from entities.music import Music
 from repositories.interfaces import IMusicMetadataRepository
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    select,
-    update as sa_update,
-    delete as sa_delete,
-)
+from models.track import Track
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import declarative_base
-
-Base = declarative_base()
-
-
-class MusicModel(Base):
-    __tablename__ = "tracks"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, unique=True, nullable=False)
-    artist_id = Column(Integer, nullable=False)
-    album_id = Column(Integer, nullable=False)  # TODO NULL? Model in folder?
-    audio = Column(String, nullable=False)
 
 
 class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
@@ -28,7 +9,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
         self.session = session
 
     async def add(self, music: Music) -> None:
-        model = MusicModel(
+        model = Track(
             name=music.name,
             artist_id=music.artist_id,
             album_id=music.album_id,
