@@ -51,7 +51,7 @@ docker_build(
     '.',
     dockerfile='./backend/dockerfile',
     live_update=[
-        sync('backend/main.py', '/app/main.py'),
+        sync('backend/', '/app/'),
         run('cd /app && pip install -r requirements.txt',
             trigger='./backend/requirements.txt'),
     ]

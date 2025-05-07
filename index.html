@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music API Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .audio-player {
+            margin-top: 20px;
+            width: 100%;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h2>Stream Music</h2>
+        <div class="form-group">
+            <label for="musicName">Music Name:</label>
+            <input type="text" id="musicName" placeholder="Enter music filename" required>
+            <button onclick="playMusic()">Play</button>
+        </div>
+        <audio id="audioPlayer" class="audio-player" controls></audio>
+    </div>
+
+    <div class="section">
+        <h2>Upload Music</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="artist">Artist:</label>
+                <input type="text" id="artist" name="artist" required>
+            </div>
+            <div class="form-group">
+                <label for="album">Album (optional):</label>
+                <input type="text" id="album" name="album">
+            </div>
+            <div class="form-group">
+                <label for="musicFile">Music File (required):</label>
+                <input type="file" id="musicFile" name="music_file" accept="audio/*" required>
+            </div>
+            <div class="form-group">
+                <label for="coverFile">Cover File (optional):</label>
+                <input type="file" id="coverFile" name="cover_file" accept="image/*">
+            </div>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="uploadMessage" class="message"></div>
+    </div>
+
+    <div class="section">
+        <h2>Delete Music</h2>
+        <form id="deleteForm">
+            <div class="form-group">
+                <label for="deleteName">Music Name:</label>
+                <input type="text" id="deleteName" name="delete_name" placeholder="Enter music filename to delete" required>
+            </div>
+            <button type="submit">Delete</button>
+        </form>
+        <div id="deleteMessage" class="message"></div>
+    </div>
+
+    <script>
+        // Stream music
+        async function playMusic() {
+            const musicName = document.getElementById('musicName').value;
+            if (!musicName) {
+                alert("Please enter a music name");
+                return;
+            }
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = `http://localhost:8000/music/${encodeURIComponent(musicName)}`;
+            audioPlayer.load();
+        }
+
+        // Upload music via form submit
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+			const messageDiv = document.getElementById('uploadMessage');
+			const formData = new FormData();
+
+			// always append these
+			formData.append('name', form.name.value);
+			formData.append('artist', form.artist.value);
+			formData.append('album', form.album.value || '');
+
+			// music file is required
+			formData.append('music_file', form.musicFile.files[0]);
+
+			// only append cover_file if the user picked one
+			if (form.coverFile.files.length > 0) {
+				formData.append('cover_file', form.coverFile.files[0]);
+			}
+
+            try {
+                const response = await fetch(
+					`http://localhost:8000/music/?${new URLSearchParams({
+						name: form.name.value,
+						artist: form.artist.value,
+						album: form.album.value || '',
+					})}`,
+					{ method: 'POST', body: formData }
+				);
+
+                if (response.ok) {
+                    showMessage(messageDiv, "Music uploaded successfully!", "success");
+                    form.reset();
+                } else {
+                    const errorData = await response.json();
+                    showMessage(messageDiv, `Error: ${errorData.detail || 'Unknown error'}`, "error");
+                }
+            } catch (error) {
+                showMessage(messageDiv, `Network error: ${error.message}`, "error");
+            }
+        });
+
+        // Delete music via form submit
+        document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const musicName = document.getElementById('deleteName').value;
+            const messageDiv = document.getElementById('deleteMessage');
+
+            if (!musicName) {
+                showMessage(messageDiv, "Please enter a music name", "error");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8000/music/${encodeURIComponent(musicName)}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showMessage(messageDiv, "Music deleted successfully!", "success");
+                    document.getElementById('deleteForm').reset();
+                } else {
+                    const errorData = await response.json();
+                    showMessage(messageDiv, `Error: ${errorData.detail || 'Unknown error'}`, "error");
+                }
+            } catch (error) {
+                showMessage(messageDiv, `Network error: ${error.message}`, "error");
+            }
+        });
+
+        // Helper to show messages
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `message ${type}`;
+        }
+    </script>
+</body>
+</html>
