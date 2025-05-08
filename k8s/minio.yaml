@@ -59,8 +59,8 @@ spec:
             httpGet:
               path: /minio/health/ready
               port: 9000
-            failureThreshold: 30
-            periodSeconds: 10
+            failureThreshold: 50
+            periodSeconds: 3
       volumes:
         - name: storage
           persistentVolumeClaim:

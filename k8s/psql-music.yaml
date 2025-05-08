@@ -73,8 +73,8 @@ spec:
                 - $POSTGRESQL_MUSIC_DB
                 - -c
                 - "SELECT 1"
-            failureThreshold: 30
-            periodSeconds: 10
+            failureThreshold: 50
+            periodSeconds: 3
       volumes:
         - name: storage
           persistentVolumeClaim:

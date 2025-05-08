@@ -12,6 +12,26 @@ spec:
       labels:
         app: it-project-music-streaming-service-backend
     spec:
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for postgres-accounts-service DNS‐registration..."
+              until nc -z postgres-accounts-service $POSTGRESQL_ACCOUNTS_PORT; do sleep 1; done
+
+              echo "Waiting for postgres-music-service DNS‐registration..."
+              until nc -z postgres-music-service $POSTGRESQL_MUSIC_PORT; do sleep 1; done
+
+              echo "Waiting for postgres-user-activity-service DNS‐registration..."
+              until nc -z postgres-user-activity-service $POSTGRESQL_USER_ACTIVITY_PORT; do sleep 1; done
+
+              echo "Waiting for minio-service DNS‐registration..."
+              until nc -z minio-service $MINIO_PORT; do sleep 1; done
+
+              echo "All dependencies are up!"
       containers:
         - name: it-project-music-streaming-service-backend
           image: it-project-music-streaming-service-backend-image
