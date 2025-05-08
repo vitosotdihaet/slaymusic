@@ -7,13 +7,15 @@
 curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
 ```
 
-# Запуск minikube
+# Запуск проекта
+
+### Запуск minikube
 
 ```bash
-minikube start --driver=docker
+minikube start
 ```
 
-# Запуск tilt (и всех сервисов)
+### Запуск tilt и всех сервисов
 
 ```bash
 tilt up
@@ -25,16 +27,18 @@ Minio WEBUI доступен по http://localhost:9101/
 
 (чекайте `.env`)
 
-# Остановка minikube (и всех сервисов)
+Если запускать кубы в WSL, то, чтобы работала синхронизация локальных файлов с теми, что в кубах, нужно держать локальные файлы в файловой системе Linux: `\wsl.localhost\`
 
-```bash
-minikube stop
-```
+# Остановка проекта
 
-# Удаление всех ресурсов tilt
+### Удаление всех сервисов и контейнеров (pvc датабаз, образы остаются для следущего tilt up)
 
 ```bash
 tilt down
 ```
 
-Если запускать кубы в WSL, то, чтобы работала синхронизация локальных файлов с теми, что В кубах, нужно держать локальные файлы в файловой системе Linux: `\wsl.localhost\`
+### Остановка minikube
+
+```bash
+minikube stop
+```

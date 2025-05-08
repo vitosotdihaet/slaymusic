@@ -2,6 +2,8 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: minio-pvc
+  annotations:
+    tilt.dev/down-policy: keep
 spec:
   accessModes:
     - ReadWriteOnce
@@ -41,6 +43,24 @@ spec:
           ports:
             - containerPort: 9100
             - containerPort: 9101
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            periodSeconds: 30
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            periodSeconds: 15
+            timeoutSeconds: 2
+          startupProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            failureThreshold: 50
+            periodSeconds: 3
       volumes:
         - name: storage
           persistentVolumeClaim:

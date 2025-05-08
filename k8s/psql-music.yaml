@@ -2,6 +2,8 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-music-pvc
+  annotations:
+    tilt.dev/down-policy: keep
 spec:
   accessModes:
     - ReadWriteOnce
@@ -38,6 +40,41 @@ spec:
           volumeMounts:
             - name: storage
               mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - $POSTGRESQL_MUSIC_ROOT_USER
+                - -d
+                - $POSTGRESQL_MUSIC_DB
+                - -q
+            periodSeconds: 10
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+                - psql
+                - -U
+                - $POSTGRESQL_MUSIC_ROOT_USER
+                - -d
+                - $POSTGRESQL_MUSIC_DB
+                - -c
+                - "SELECT 1"
+            periodSeconds: 10
+            timeoutSeconds: 1
+          startupProbe:
+            exec:
+              command:
+                - psql
+                - -U
+                - $POSTGRESQL_MUSIC_ROOT_USER
+                - -d
+                - $POSTGRESQL_MUSIC_DB
+                - -c
+                - "SELECT 1"
+            failureThreshold: 50
+            periodSeconds: 3
       volumes:
         - name: storage
           persistentVolumeClaim:
