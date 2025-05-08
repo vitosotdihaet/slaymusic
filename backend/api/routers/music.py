@@ -8,10 +8,10 @@ from fastapi import (
 )
 from fastapi.responses import StreamingResponse
 
-from entities.music import Music
+from dto.music import Track
 from services.music import MusicService
-from depends import get_music_service
-from services.exceptions import (
+from configs.depends import get_music_service
+from exceptions.music import (
     InvalidStartException,
     MusicFileNotFoundException,
     UseCaseException,
@@ -83,11 +83,11 @@ async def create_music(
         cover_content_type = cover_file.content_type
         cover_path = cover_file.filename
 
-    music = Music(
+    music = Track(
         name=name,
         artist=artist,
         album=album,
-        cover_file_path=cover_path,
+        picture_path=cover_path,
     )
     try:
         await music_service.create_music(music, data, content_type)
@@ -97,7 +97,7 @@ async def create_music(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{music_name}/metadata", response_model=Music)
+@router.get("/{music_name}/metadata", response_model=Track)
 async def read_metadata(
     music_name: str,
     music_service: MusicService = Depends(get_music_service),
@@ -111,7 +111,7 @@ async def read_metadata(
 @router.put("/{music_name}/metadata", status_code=204)
 async def update_metadata(
     music_name: str,
-    meta: Music,
+    meta: Track,
     music_service: MusicService = Depends(get_music_service),
 ):
     try:

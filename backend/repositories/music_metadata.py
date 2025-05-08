@@ -1,51 +1,64 @@
-from entities.music import Music
+from dto.music import Track
 from repositories.interfaces import IMusicMetadataRepository
-from models.track import Track
+from models.track import TrackModel
+from models.album import AlbumModel
+from models.artist import ArtistModel
+from configs.database import engine, Base
+from exceptions.music import MusicFileNotFoundException
+
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update, delete
 
 
 class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def add(self, music: Music) -> None:
-        model = Track(
-            name=music.name,
-            artist_id=music.artist_id,
-            album_id=music.album_id,
-            audio=music.audio,
+    async def create(
+        session: AsyncSession,
+    ) -> "SQLAlchemyMusicMetadataRepository":
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        return SQLAlchemyMusicMetadataRepository(session)
+
+    async def add(self, track: Track) -> None:
+        model = TrackModel(
+            name=track.name,
+            artist_id=track.artist_id,
+            album_id=track.album_id,
+            picture_path=track.picture_path,
         )
         self.session.add(model)
         await self.session.commit()
 
-    async def get(self, name: str) -> Music | None:
-        result = await self.session.execute(
-            select(MusicModel).where(MusicModel.name == name)
-        )
+    async def get(self, name: str) -> Track | None:
+        stmt = select(TrackModel).where(TrackModel.name == name)
+        result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
         if model:
-            return Music(
-                id=model.id,
+            return Track(
                 name=model.name,
-                artist_id=model.artist_id,
-                album_id=model.album_id,
-                audio=model.audio,
+                artist=model.artist,
+                album=model.album,
+                picture_path=model.picture_path,
             )
-        return None
+        raise MusicFileNotFoundException(f"Metadata for '{model.name}' not found")
 
-    async def update(self, name: str, music: Music) -> None:
-        await self.session.execute(
-            sa_update(MusicModel)
-            .where(MusicModel.name == name)
+    async def update(self, name: str, track: Track) -> None:
+        stmt = (
+            update(TrackModel)
+            .where(TrackModel.name == name)
             .values(
-                name=music.name,
-                artist_id=music.artist_id,
-                album_id=music.album_id,
-                audio=music.audio,
+                name=track.name,
+                artist=track.artist,
+                album=track.album,
+                picture_path=track.picture_path,
             )
         )
+        await self.session.execute(stmt)
         await self.session.commit()
 
     async def delete(self, name: str) -> None:
-        await self.session.execute(sa_delete(MusicModel).where(MusicModel.name == name))
+        stmt = delete(TrackModel).where(TrackModel.name == name)
+        await self.session.execute(stmt)
         await self.session.commit()

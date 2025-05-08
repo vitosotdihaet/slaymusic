@@ -1,6 +1,6 @@
 from .interfaces import IMusicFileRepository
-from entities.DTO import MusicStats
-from services.exceptions import MusicFileNotFoundException
+from dto.music import MusicStats
+from exceptions.music import MusicFileNotFoundException
 
 from aiohttp import ClientSession
 from typing import AsyncIterator

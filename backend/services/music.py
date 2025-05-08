@@ -1,7 +1,6 @@
 from repositories.interfaces import IMusicFileRepository, IMusicMetadataRepository
-from entities.DTO import MusicStream
-from .exceptions import InvalidStartException
-from entities.music import Music
+from dto.music import MusicStream, Track
+from exceptions.music import InvalidStartException
 
 
 class MusicService:
@@ -37,30 +36,26 @@ class MusicService:
         return MusicStream(stream, start, end, file_byte_size, content_length)
 
     async def create_music(
-        self, music: Music, file_data: bytes, content_type: str
+        self, track: Track, file_data: bytes, content_type: str
     ) -> None:
-        await self.music_file_repository.save_music(music.name, file_data, content_type)
-        await self.music_metadata_repository.add(music)
+        await self.music_file_repository.save_music(track.name, file_data, content_type)
+        await self.music_metadata_repository.add(track)
 
     async def create_cover(
-        self, music: Music, file_data: bytes, content_type: str
+        self, track: Track, file_data: bytes, content_type: str
     ) -> None:
         await self.music_file_repository.save_cover(
-            music.cover_file_path, file_data, content_type
+            track.cover_file_path, file_data, content_type
         )
 
-    async def get_metadata(self, name: str) -> Music:
+    async def get_metadata(self, name: str) -> Track:
         meta = await self.music_metadata_repository.get(name)
-        if not meta:
-            raise UseCaseException(f"Metadata for '{name}' not found")
         return meta
 
-    async def update_metadata(self, name: str, music: Music) -> None:
-        existing = await self.music_metadata_repository.get(name)
-        if not existing:
-            raise UseCaseException(f"Cannot update, '{name}' not found")
-        await self.music_metadata_repository.update(name, music)
+    async def update_metadata(self, name: str, track: Track) -> None:
+        await self.music_metadata_repository.get(name)
+        await self.music_metadata_repository.update(name, track)
 
     async def delete_music(self, name: str) -> None:
-        # await self.music_metadata_repository.delete(name)
+        await self.music_metadata_repository.delete(name)
         await self.music_file_repository.delete_file(name)
