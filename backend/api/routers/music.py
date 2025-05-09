@@ -7,7 +7,7 @@ from fastapi import (
     Request,
 )
 from fastapi.responses import StreamingResponse
-from dto.music import Track, Artist
+from dto.music import Track, NewArtist, Artist, NewAlbum, Album
 from services.music import MusicService
 from configs.depends import get_music_service
 from exceptions.music import (
@@ -18,31 +18,18 @@ from exceptions.music import (
 
 router = APIRouter(prefix="/music", tags=["music"])
 
+
 @router.post(
-    "/{artist_id}",
+    "/artists",
     response_model=None,
     status_code=201,
 )
-async def add_artist(
+async def create_artist(
     artist_name: str,
-    artist_picture_path: str | None,
+    artist_description: str | None,
     music_service: MusicService = Depends(get_music_service),
 ):
-    # data = await music_file.read()
-    # content_type = music_file.content_type
-    #
-    # if cover_file == "":
-    #     cover_file = None
-    # cover_path = None
-    # if cover_file:
-    #     cover_bytes = await cover_file.read()
-    #     cover_content_type = cover_file.content_type
-    #     cover_path = cover_file.filename
-
-    artist = Artist(
-        artist_name=artist_name,
-        artist_picture_path = artist_picture_path
-    )
+    artist = NewArtist(name=artist_name, description=artist_description)
     try:
         await music_service.create_artist(artist)
         # if cover_file:
@@ -51,10 +38,117 @@ async def add_artist(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/artists/{artist_id}", response_model=Artist)
+async def get_artist(
+    artist_id: int,
+    music_service: MusicService = Depends(get_music_service),
+):
+    try:
+        return await music_service.get_artist(artist_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Artist not found")
+
+
+@router.delete("/artists/{artist_id}", status_code=200)
+async def delete_artist(
+    artist: Artist,
+    music_service: MusicService = Depends(get_music_service),
+):
+    try:
+        await music_service.delete_artist(artist)
+    except MusicFileNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.put("/artists/{artist_id}", status_code=204)
+async def update_metadata(
+    artist_id: int,
+    artist: Artist,
+    music_service: MusicService = Depends(get_music_service),
+):
+    try:
+        await music_service.update_artist(artist_id, artist)
+    except UseCaseException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post(
+    "/albums",
+    response_model=None,
+    status_code=201,
+)
+async def create_album(
+    name: str,
+    artist_id: int,
+    music_service: MusicService = Depends(get_music_service),
+):
+    album = NewAlbum(name=name, artist_id=artist_id)
+    try:
+        await music_service.create_album(album)
+        # if cover_file:
+        #     await music_service.create_cover(music, cover_bytes, cover_content_type)
+    except UseCaseException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/albums/{album_id}", response_model=Album)
+async def get_album(
+    album_id: int,
+    music_service: MusicService = Depends(get_music_service),
+):
+    try:
+        return await music_service.get_album(album_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Artist not found")
+
+
+@router.delete("/albums/{album_id}", status_code=200)
+async def delete_album(
+    album: Album,
+    music_service: MusicService = Depends(get_music_service),
+):
+    try:
+        await music_service.delete_album(album)
+    except MusicFileNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post("/", response_model=None, status_code=201)
+async def create_music(
+    name: str,
+    artist: str,
+    music_file: UploadFile,
+    album: str | None = None,
+    cover_file: UploadFile | str | None = None,
+    music_service: MusicService = Depends(get_music_service),
+):
+    data = await music_file.read()
+    content_type = music_file.content_type
+
+    if cover_file == "":
+        cover_file = None
+    cover_path = None
+    if cover_file:
+        cover_bytes = await cover_file.read()
+        cover_content_type = cover_file.content_type
+        cover_path = cover_file.filename
+
+    music = Track(
+        name=name,
+        artist=artist,
+        album=album,
+        picture_path=cover_path,
+    )
+    try:
+        await music_service.create_music(music, data, content_type)
+        if cover_file:
+            await music_service.create_cover(music, cover_bytes, cover_content_type)
+    except UseCaseException as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get(
-    "/{music_name}",
+    "/{music_id}",
     response_model=None,
     status_code=206,
 )
@@ -94,71 +188,3 @@ async def stream_music_endpoint(
             "Content-Length": str(music.content_length),
         },
     )
-
-
-@router.post("/", response_model=None, status_code=201)
-async def create_music(
-    name: str,
-    artist: str,
-    music_file: UploadFile,
-    album: str | None = None,
-    cover_file: UploadFile | str | None = None,
-    music_service: MusicService = Depends(get_music_service),
-):
-    data = await music_file.read()
-    content_type = music_file.content_type
-
-    if cover_file == "":
-        cover_file = None
-    cover_path = None
-    if cover_file:
-        cover_bytes = await cover_file.read()
-        cover_content_type = cover_file.content_type
-        cover_path = cover_file.filename
-
-    music = Track(
-        name=name,
-        artist=artist,
-        album=album,
-        picture_path=cover_path,
-    )
-    try:
-        await music_service.create_music(music, data, content_type)
-        if cover_file:
-            await music_service.create_cover(music, cover_bytes, cover_content_type)
-    except UseCaseException as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.get("/{music_name}/metadata", response_model=Track)
-async def read_metadata(
-    music_name: str,
-    music_service: MusicService = Depends(get_music_service),
-):
-    try:
-        return await music_service.get_metadata(music_name)
-    except UseCaseException as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-
-@router.put("/{music_name}/metadata", status_code=204)
-async def update_metadata(
-    music_name: str,
-    meta: Track,
-    music_service: MusicService = Depends(get_music_service),
-):
-    try:
-        await music_service.update_metadata(music_name, meta)
-    except UseCaseException as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-
-@router.delete("/{music_name}", status_code=200)
-async def delete_music(
-    music_name: str,
-    music_service: MusicService = Depends(get_music_service),
-):
-    try:
-        await music_service.delete_music(music_name)
-    except MusicFileNotFoundException as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

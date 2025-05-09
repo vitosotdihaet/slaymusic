@@ -3,7 +3,7 @@ from typing import AsyncIterator
 from dataclasses import dataclass
 
 
-class MusicStats(BaseModel):
+class MusicFileStats(BaseModel):
     size: int
 
 

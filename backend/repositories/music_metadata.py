@@ -55,13 +55,13 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
 
     # Artist
     async def create_artist(self, new_artist: NewArtist) -> Artist:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             artist_to_add = ArtistModel(**new_artist.model_dump())
             artist_added = await self._add_and_commit(artist_to_add, session)
             return Artist.model_validate(artist_added, from_attributes=True)
 
     async def get_artist_by_id(self, artist_id: int) -> Artist:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             query = select(ArtistModel).where(ArtistModel.id == artist_id)
             model = await self._get_one_or_none(query, session)
             if not model:
@@ -69,13 +69,13 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
             return Artist.model_validate(model, from_attributes=True)
 
     async def get_all_artists(self, skip: int = 0, limit: int = 100) -> list[Artist]:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             query = select(ArtistModel).offset(skip).limit(limit)
             models = await self._get_all(query, session)
             return [Artist.model_validate(m, from_attributes=True) for m in models]
 
     async def update_artist(self, artist_id: int, new_data: NewArtist) -> Artist:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             model = await self._get_one_or_none(
                 select(ArtistModel).where(ArtistModel.id == artist_id), session
             )
@@ -85,7 +85,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
             return Artist.model_validate(updated, from_attributes=True)
 
     async def delete_artist(self, artist_id: int) -> None:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             query = delete(ArtistModel).where(ArtistModel.id == artist_id)
             deleted = await self._delete_and_commit(query, session)
             if deleted == 0:
@@ -93,7 +93,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
 
     # Album
     async def create_album(self, new_album: NewAlbum) -> Album:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             artist = await self._get_one_or_none(
                 select(ArtistModel).where(ArtistModel.id == new_album.artist_id),
                 session,
@@ -105,7 +105,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
             return Album.model_validate(added, from_attributes=True)
 
     async def get_album_by_id(self, album_id: int) -> Album:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             model = await self._get_one_or_none(
                 select(AlbumModel).where(AlbumModel.id == album_id), session
             )
@@ -116,7 +116,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
     async def get_albums_by_artist(
         self, artist_id: int, skip: int = 0, limit: int = 100
     ) -> list[Album]:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             query = (
                 select(AlbumModel)
                 .where(AlbumModel.artist_id == artist_id)
@@ -127,7 +127,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
             return [Album.model_validate(m, from_attributes=True) for m in models]
 
     async def update_album(self, album_id: int, new_data: NewAlbum) -> Album:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             model = await self._get_one_or_none(
                 select(AlbumModel).where(AlbumModel.id == album_id), session
             )
@@ -137,7 +137,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
             return Album.model_validate(updated, from_attributes=True)
 
     async def delete_album(self, album_id: int) -> None:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             query = delete(AlbumModel).where(AlbumModel.id == album_id)
             deleted = await self._delete_and_commit(query, session)
             if deleted == 0:
@@ -145,7 +145,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
 
     # Track
     async def create_track(self, new_track: NewTrack) -> Track:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             album = await self._get_one_or_none(
                 select(AlbumModel).where(AlbumModel.id == new_track.album_id), session
             )
@@ -162,7 +162,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
             return Track.model_validate(added, from_attributes=True)
 
     async def get_track_by_id(self, track_id: int) -> Track:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             model = await self._get_one_or_none(
                 select(TrackModel).where(TrackModel.id == track_id), session
             )
@@ -170,10 +170,29 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
                 raise TrackNotFoundException(track_id)
             return Track.model_validate(model, from_attributes=True)
 
+    async def get_tracks_by_artist(
+        self, artist_id: int, skip: int = 0, limit: int = 100
+    ) -> list[Track]:
+        async with self.session_factory() as session:
+            query = (
+                select(TrackModel)
+                .where(TrackModel.artist_id == artist_id)
+                .offset(skip)
+                .limit(limit)
+            )
+            models = await self._get_all(query, session)
+            return [Track.model_validate(m, from_attributes=True) for m in models]
+
+    async def get_tracks(self, skip: int = 0, limit: int = 100) -> list[Track]:
+        async with self.session_factory() as session:
+            query = select(TrackModel).offset(skip).limit(limit)
+            models = await self._get_all(query, session)
+            return [Track.model_validate(m, from_attributes=True) for m in models]
+
     async def get_tracks_by_album(
         self, album_id: int, skip: int = 0, limit: int = 100
     ) -> list[Track]:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             query = (
                 select(TrackModel)
                 .where(TrackModel.album_id == album_id)
@@ -184,7 +203,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
             return [Track.model_validate(m, from_attributes=True) for m in models]
 
     async def update_track(self, track_id: int, new_data: NewTrack) -> Track:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             model = await self._get_one_or_none(
                 select(TrackModel).where(TrackModel.id == track_id), session
             )
@@ -194,7 +213,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
             return Track.model_validate(updated, from_attributes=True)
 
     async def delete_track(self, track_id: int) -> None:
-        async with self._session_factory() as session:
+        async with self.session_factory() as session:
             query = delete(TrackModel).where(TrackModel.id == track_id)
             deleted = await self._delete_and_commit(query, session)
             if deleted == 0:
