@@ -7,8 +7,7 @@ from fastapi import (
     Request,
 )
 from fastapi.responses import StreamingResponse
-
-from dto.music import Track
+from dto.music import Track, Artist
 from services.music import MusicService
 from configs.depends import get_music_service
 from exceptions.music import (
@@ -18,6 +17,40 @@ from exceptions.music import (
 )
 
 router = APIRouter(prefix="/music", tags=["music"])
+
+@router.post(
+    "/{artist_id}",
+    response_model=None,
+    status_code=201,
+)
+async def add_artist(
+    artist_name: str,
+    artist_picture_path: str | None,
+    music_service: MusicService = Depends(get_music_service),
+):
+    # data = await music_file.read()
+    # content_type = music_file.content_type
+    #
+    # if cover_file == "":
+    #     cover_file = None
+    # cover_path = None
+    # if cover_file:
+    #     cover_bytes = await cover_file.read()
+    #     cover_content_type = cover_file.content_type
+    #     cover_path = cover_file.filename
+
+    artist = Artist(
+        artist_name=artist_name,
+        artist_picture_path = artist_picture_path
+    )
+    try:
+        await music_service.create_artist(artist)
+        # if cover_file:
+        #     await music_service.create_cover(music, cover_bytes, cover_content_type)
+    except UseCaseException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 
 
 @router.get(

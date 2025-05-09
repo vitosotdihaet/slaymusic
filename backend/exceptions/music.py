@@ -8,3 +8,6 @@ class InvalidStartException(UseCaseException):
 
 class MusicFileNotFoundException(UseCaseException):
     pass
+
+class ArtistNotFoundException(UseCaseException):
+    pass

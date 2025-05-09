@@ -1,9 +1,7 @@
 from dto.music import Track
 from repositories.interfaces import IMusicMetadataRepository
-from models.track import TrackModel
-from models.album import AlbumModel
-from models.artist import ArtistModel
-from configs.database import engine, Base
+from models.music import MusicBase, TrackModel, AlbumModel, ArtistModel
+from configs.database import ensure_tables
 from exceptions.music import MusicFileNotFoundException
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,8 +15,7 @@ class SQLAlchemyMusicMetadataRepository(IMusicMetadataRepository):
     async def create(
         session: AsyncSession,
     ) -> "SQLAlchemyMusicMetadataRepository":
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        await ensure_tables(MusicBase, "music")
         return SQLAlchemyMusicMetadataRepository(session)
 
     async def add(self, track: Track) -> None:
