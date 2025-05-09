@@ -1,21 +1,22 @@
-from repositories.interfaces import IMusicFileRepository, IMusicMetadataRepository, IMusicArtistRepository
+from repositories.interfaces import (
+    IMusicFileRepository,
+    IMusicMetadataRepository,
+)
 from dto.music import MusicStream, Track, Artist
 from exceptions.music import InvalidStartException
+
 
 class MusicService:
     music_file_repository: IMusicFileRepository
     music_metadata_repository: IMusicMetadataRepository
-    artist_repository: IMusicArtistRepository
+
     def __init__(
         self,
         music_file_repository: IMusicFileRepository,
         music_metadata_repository: IMusicMetadataRepository,
-        artist_repository: IMusicArtistRepository
     ) -> None:
         self.music_file_repository = music_file_repository
         self.music_metadata_repository = music_metadata_repository
-        self.artist_repository = artist_repository
-
 
     async def stream_music(
         self, music_name: str, start: int | None = None, end: int | None = None
@@ -54,8 +55,8 @@ class MusicService:
         meta = await self.music_metadata_repository.get(name)
         return meta
 
-    async def create_artist(self, artist: Artist):
-        await self.artist_repository.add(artist)
+    # async def create_artist(self, artist: Artist):
+    #     await self.artist_repository.add(artist)
 
     async def update_metadata(self, name: str, track: Track) -> None:
         await self.music_metadata_repository.get(name)

@@ -16,16 +16,36 @@ class MusicStream:
     content_length: int
 
 
+class NewTrack(BaseModel):
+    name: str
+    album_id: int
+    artist_id: int
+
+
+class NewArtist(BaseModel):
+    name: str
+    description: str | None
+
+
+class NewAlbum(BaseModel):
+    name: str
+    artist_id: int
+
+
 class Track(BaseModel):
-    track_name: str
-    picture_path: str
+    id: int
+    name: str
+    album_id: int
+    artist_id: int
 
 
 class Artist(BaseModel):
-    artist_name: str
-    artist_picture_path: str
+    id: int
+    name: str
+    description: str | None
 
 
 class Album(BaseModel):
-    album_name: str
-    picture_path: str
+    id: int
+    name: str
+    artist_id: int

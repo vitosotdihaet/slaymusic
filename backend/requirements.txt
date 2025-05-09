@@ -6,5 +6,4 @@ miniopy-async
 pydantic-settings
 python-multipart
 sqlalchemy
-psycopg2-binary
 asyncpg

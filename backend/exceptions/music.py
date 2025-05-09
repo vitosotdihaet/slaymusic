@@ -9,5 +9,14 @@ class InvalidStartException(UseCaseException):
 class MusicFileNotFoundException(UseCaseException):
     pass
 
+
 class ArtistNotFoundException(UseCaseException):
+    pass
+
+
+class TrackNotFoundException(UseCaseException):
+    pass
+
+
+class AlbumNotFoundException(UseCaseException):
     pass

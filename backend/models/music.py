@@ -1,51 +1,65 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Integer, String, Text, ForeignKey
+from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 
 MusicBase = declarative_base()
 
+
 class ArtistModel(MusicBase):
     __tablename__ = "artists"
-    artist_id = Column(Integer, primary_key=True, autoincrement=True)
-    artist_name = Column(String, nullable=False)
-    artist_picture_path = Column(String, nullable=True)
 
-    def normalize(self):
-        return {
-            "artist_id": self.artist_id.__str__(),
-            "artist_name": self.artist_name.__str__(),
-            "artist_picture_path": self.artist_picture_path.__str__(),
-        }
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True, autoincrement=True
+    )
+    name: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    albums: Mapped[list["AlbumModel"]] = relationship(
+        "AlbumModel", back_populates="artist", cascade="all, delete-orphan"
+    )
+    tracks: Mapped[list["TrackModel"]] = relationship(
+        "TrackModel", back_populates="artist", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self):
+        return f"<Artist(id={self.id}, name='{self.name}')>"
 
 
 class AlbumModel(MusicBase):
     __tablename__ = "albums"
-    album_id = Column(Integer, primary_key=True, autoincrement=True)
-    artist_id = Column(Integer, ForeignKey("artists.artist_id", ondelete="CASCADE"), nullable=False)
-    album_name = Column(String, nullable=False)
-    picture_path = Column(String, nullable=True)
 
-    def normalize(self):
-        return {
-            "id": self.id.__str__(),
-            "artist_id": self.artist_id.__str__(),
-            "name": self.name.__str__(),
-            "picture_path": self.picture_path.__str__(),
-        }
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True, autoincrement=True
+    )
+    name: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    artist_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("artists.id", ondelete="CASCADE"), nullable=False
+    )
+
+    artist: Mapped["ArtistModel"] = relationship("ArtistModel", back_populates="albums")
+    tracks: Mapped[list["TrackModel"]] = relationship(
+        "TrackModel", back_populates="album", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self):
+        return f"<Album(id={self.id}, name='{self.name}', artist_id={self.artist_id})>"
 
 
 class TrackModel(MusicBase):
     __tablename__ = "tracks"
-    track_id = Column(Integer, primary_key=True, autoincrement=True)
-    track_name = Column(String, nullable=False)
-    artist_id = Column(Integer, ForeignKey("artists.artist_id", ondelete="CASCADE") ,nullable=False)
-    album_id = Column(Integer, ForeignKey("albums.album_id", ondelete="CASCADE"), nullable=False)
-    picture_path = Column(String, nullable=True)
 
-    def normalize(self):
-        return {
-            "id": self.id.__str__(),
-            "name": self.name.__str__(),
-            "artist_id": self.artist_id.__str__(),
-            "album_id": self.album_id.__str__(),
-            "picture_path": self.picture_path.__str__(),
-        }
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True, autoincrement=True
+    )
+    name: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    album_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("albums.id", ondelete="CASCADE"), nullable=False
+    )
+    artist_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("artists.id", ondelete="CASCADE"), nullable=False
+    )
+
+    album: Mapped["AlbumModel"] = relationship("AlbumModel", back_populates="tracks")
+    artist: Mapped["ArtistModel"] = relationship("ArtistModel", back_populates="tracks")
+
+    def __repr__(self):
+        return f"<Track(id={self.id}, name='{self.name}', album_id={self.album_id}, artist_id={self.artist_id})>"
