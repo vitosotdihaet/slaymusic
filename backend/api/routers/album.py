@@ -97,7 +97,7 @@ async def get_album_image(
     try:
         image_bytes = await music_service.get_album_image(album_id)
         return Response(content=image_bytes, media_type="image/png")
-    except ImageFileNotFoundException as e:
+    except (AlbumNotFoundException, ImageFileNotFoundException) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
@@ -147,5 +147,5 @@ async def delete_album_image(
 ):
     try:
         await music_service.delete_album_image(album_id)
-    except ImageFileNotFoundException as e:
+    except (AlbumNotFoundException, ImageFileNotFoundException) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

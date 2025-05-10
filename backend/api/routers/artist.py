@@ -128,5 +128,5 @@ async def delete_artist_image(
 ):
     try:
         await music_service.delete_artist_image(artist_id)
-    except ImageFileNotFoundException as e:
+    except (ArtistNotFoundException, ImageFileNotFoundException) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

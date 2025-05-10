@@ -166,13 +166,16 @@ class MusicService:
     async def get_album(self, album_id: AlbumID) -> Album:
         return await self.album_repository.get_album_by_id(album_id)
 
-    async def get_albums_by_artist(self, artist_id: ArtistID) -> list[Album]:
-        return await self.album_repository.get_albums_by_artist(artist_id)
+    async def get_albums_by_artist(
+        self, artist_id: ArtistID, skip: int = 0, limit: int = 100
+    ) -> list[Album]:
+        return await self.album_repository.get_albums_by_artist(artist_id, skip, limit)
 
     async def get_albums(self, skip: int = 0, limit: int = 100) -> list[Album]:
         return await self.album_repository.get_albums(skip, limit)
 
     async def get_album_image(self, album_id: AlbumID) -> bytes:
+        await self.album_repository.get_album_by_id(album_id)
         return await self.music_file_repository.get_image(album_id)
 
     async def update_album(self, album: Album) -> Album:
@@ -190,13 +193,14 @@ class MusicService:
         )
 
     async def delete_album(self, album_id: AlbumID) -> None:
+        await self.album_repository.delete_album(album_id)
         try:
             await self.music_file_repository.delete_image(album_id)
         except ImageFileNotFoundException:
             pass
-        await self.album_repository.delete_album(album_id)
 
     async def delete_album_image(self, album_id: AlbumID) -> None:
+        await self.album_repository.delete_album(album_id)
         await self.music_file_repository.delete_image(album_id)
 
     # Artist
@@ -217,6 +221,7 @@ class MusicService:
         return await self.artist_repository.get_artist_by_id(artist_id)
 
     async def get_artist_image(self, artist_id: ArtistID) -> bytes:
+        await self.artist_repository.get_artist_by_id(artist_id)
         return await self.music_file_repository.get_image(artist_id)
 
     async def get_artists(self, skip: int = 0, limit: int = 100) -> list[Artist]:
@@ -237,11 +242,12 @@ class MusicService:
         )
 
     async def delete_artist(self, artist_id: ArtistID) -> None:
+        await self.artist_repository.delete_artist(artist_id)
         try:
             await self.music_file_repository.delete_image(artist_id)
         except ImageFileNotFoundException:
             pass
-        await self.artist_repository.delete_artist(artist_id)
 
     async def delete_artist_image(self, artist_id: ArtistID) -> None:
+        await self.artist_repository.get_artist_by_id(artist_id)
         await self.music_file_repository.delete_image(artist_id)
