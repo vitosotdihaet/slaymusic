@@ -1,71 +1,90 @@
 from repositories.interfaces import (
     IMusicFileRepository,
-    IMusicMetadataRepository,
+    IArtistRepository,
+    IAlbumRepository,
+    ITrackRepository,
 )
-from dto.music import MusicStream, Track, Artist, Album, NewAlbum, NewArtist, NewTrack
-from exceptions.music import InvalidStartException
+from dto.music import (
+    MusicStream,
+    Track,
+    Artist,
+    Album,
+    NewAlbum,
+    NewArtist,
+    NewTrack,
+    NewSingle,
+    AlbumID,
+    ArtistID,
+    TrackID,
+)
+from exceptions.music import (
+    InvalidStartException,
+    ImageFileNotFoundException,
+)
 
 
 class MusicService:
     music_file_repository: IMusicFileRepository
-    music_metadata_repository: IMusicMetadataRepository
+    track_repository: ITrackRepository
+    album_repository: IAlbumRepository
+    artist_repository: IArtistRepository
 
     def __init__(
         self,
         music_file_repository: IMusicFileRepository,
-        music_metadata_repository: IMusicMetadataRepository,
+        track_repository: ITrackRepository,
+        album_repository: IAlbumRepository,
+        artist_repository: IArtistRepository,
     ) -> None:
         self.music_file_repository = music_file_repository
-        self.music_metadata_repository = music_metadata_repository
-
-    def _get_track_path(track: Track):
-        return f"{track.artist_id}/{track.id}"
-
-    def _get_artist_path(artist: Artist):
-        return f"artist/{artist.id}"
-
-    def _get_album_path(album: Album):
-        return f"album/{album.id}"
+        self.track_repository = track_repository
+        self.album_repository = album_repository
+        self.artist_repository = artist_repository
 
     # Music (track + metadata)
     async def create_music_single(
         self,
-        music: NewAlbum,
+        new_track: NewSingle,
         music_data: bytes,
-        image_data: bytes | None,
         music_content_type: str,
+        image_data: bytes | None,
         image_content_type: str | None,
-    ) -> None:
-        album = await self.music_metadata_repository.create_album(music)
-        track = await self.music_metadata_repository.create_track(
-            NewTrack(music, album.id)
+    ) -> Track:
+        album = await self.album_repository.create_album(
+            NewAlbum(name=new_track.name, artist_id=new_track.artist_id)
+        )
+        track = await self.track_repository.create_track(
+            NewTrack(
+                name=new_track.name, artist_id=new_track.artist_id, album_id=album.id
+            )
         )
 
-        await self.music_file_repository.save_music(
-            self._get_track_path(track), music_data, music_content_type
+        await self.music_file_repository.save_track(
+            track, music_data, music_content_type
         )
         if image_content_type:
             await self.music_file_repository.save_image(
-                self._get_album_path(album), image_data, image_content_type
+                album, image_data, image_content_type
             )
+        return track
 
     async def create_music_to_album(
         self,
-        music: NewTrack,
+        new_track: NewTrack,
         music_data: bytes,
         music_content_type: str,
-    ) -> None:
-        track = await self.music_metadata_repository.add(music)
-        await self.music_file_repository.save_music(
-            self._get_track_path(track), music_data, music_content_type
+    ) -> Track:
+        track = await self.track_repository.create_track(new_track)
+        await self.music_file_repository.save_track(
+            track, music_data, music_content_type
         )
+        return track
 
     async def stream_music(
-        self, track: Track, start: int | None = None, end: int | None = None
+        self, track_id: TrackID, start: int | None = None, end: int | None = None
     ) -> MusicStream:
-        stats = await self.music_file_repository.get_music_stats(
-            self._get_track_path(track)
-        )
+        track = await self.track_repository.get_track_by_id(track_id)
+        stats = await self.music_file_repository.get_track_stats(track)
 
         file_byte_size = stats.size
 
@@ -78,79 +97,107 @@ class MusicService:
         end = min(end, file_byte_size - 1)
         content_length = end - start + 1
 
-        stream = self.music_file_repository.stream_music(
-            self._get_track_path(track), start, end
-        )
+        stream = self.music_file_repository.stream_track(track, start, end)
 
         return MusicStream(stream, start, end, file_byte_size, content_length)
 
-    async def get_music_metadata(self, id: int) -> Track:
-        return await self.music_metadata_repository.get_track_by_id(id)
+    async def get_music_metadata(self, track_id: TrackID) -> Track:
+        return await self.track_repository.get_track_by_id(track_id)
 
     async def get_musics_metadata_by_album(
-        self, id: int, skip: int, limit: int
+        self, album_id: AlbumID, skip: int, limit: int
     ) -> list[Track]:
-        return await self.music_metadata_repository.get_tracks_by_album(id, skip, limit)
+        return await self.track_repository.get_tracks_by_album(album_id, skip, limit)
 
     async def get_musics_metadata_by_artist(
-        self, id: int, skip: int, limit: int
+        self, artist_id: ArtistID, skip: int, limit: int
     ) -> list[Track]:
-        return await self.music_metadata_repository.get_tracks_by_artist(
-            id, skip, limit
-        )
+        return await self.track_repository.get_tracks_by_artist(artist_id, skip, limit)
 
     async def get_musics_metadata(self, skip: int, limit: int) -> list[Track]:
-        return await self.music_metadata_repository.get_tracks(skip, limit)
+        return await self.track_repository.get_tracks(skip, limit)
+
+    async def get_music_image(self, track_id: TrackID) -> bytes:
+        track = await self.track_repository.get_track_by_id(track_id)
+        return await self.music_file_repository.get_image(AlbumID(id=track.album_id))
 
     async def update_music_metadata(self, track: Track) -> Track:
-        return await self.music_metadata_repository.update_track(id, track)
+        return await self.track_repository.update_track(track)
 
     async def update_music_file(
-        self, track: Track, music_data: bytes, music_content_type: str
+        self, track_id: TrackID, image_data: bytes, image_content_type: str
     ):
-        await self.music_file_repository.save_music(
-            self._get_track_path(track), music_data, music_content_type
+        track = await self.track_repository.get_track_by_id(track_id)
+        await self.music_file_repository.save_image(
+            AlbumID(id=track.album_id), image_data, image_content_type
         )
 
-    async def delete_music(self, track: Track) -> None:
-        await self.music_file_repository.delete_file(self._get_track_path(track))
-        await self.music_metadata_repository.delete_track(track.id)
+    async def update_music(
+        self, track_id: TrackID, music_data: bytes, music_content_type: str
+    ):
+        track = await self.track_repository.get_track_by_id(track_id)
+        await self.music_file_repository.save_track(
+            track, music_data, music_content_type
+        )
+
+    async def delete_music(self, track_id: TrackID) -> None:
+        track = await self.track_repository.get_track_by_id(track_id)
+        await self.music_file_repository.delete_track(track)
+        await self.track_repository.delete_track(track_id)
+
+    async def delete_music_image(self, track_id: TrackID) -> None:
+        track = await self.track_repository.get_track_by_id(track_id)
+        await self.music_file_repository.delete_image(AlbumID(id=track.album_id))
 
     # Album
     async def create_album(
         self,
         new_album: NewAlbum,
-        image_data: bytes,
-        image_content_type: str,
+        image_data: bytes | None,
+        image_content_type: str | None,
     ) -> Album:
-        album = await self.music_metadata_repository.create_album(new_album)
-        await self.music_file_repository.save_image(
-            self._get_album_path(album), image_data, image_content_type
-        )
+        album = await self.album_repository.create_album(new_album)
+        if image_content_type:
+            await self.music_file_repository.save_image(
+                album, image_data, image_content_type
+            )
         return album
 
-    async def get_album(self, id: int) -> Album:
-        return await self.music_metadata_repository.get_album_by_id(id)
+    async def get_album(self, album_id: AlbumID) -> Album:
+        return await self.album_repository.get_album_by_id(album_id)
 
-    async def get_album_image(self, album: Album) -> bytes:
-        return await self.music_file_repository.get_image(self._get_album_path(album))
+    async def get_albums_by_artist(self, artist_id: ArtistID) -> list[Album]:
+        return await self.album_repository.get_albums_by_artist(artist_id)
 
-    async def update_album(self, id: int, album: NewAlbum) -> Album:
-        return await self.music_metadata_repository.update_album(id, Album)
+    async def get_albums(self, skip: int = 0, limit: int = 100) -> list[Album]:
+        return await self.album_repository.get_albums(skip, limit)
+
+    async def get_album_image(self, album_id: AlbumID) -> bytes:
+        return await self.music_file_repository.get_image(album_id)
+
+    async def update_album(self, album: Album) -> Album:
+        return await self.album_repository.update_album(album)
 
     async def update_album_image(
         self,
-        album: Album,
+        album_id: AlbumID,
         image_data: bytes,
         image_content_type: str,
     ) -> Album:
+        await self.album_repository.get_album_by_id(album_id)
         await self.music_file_repository.save_image(
-            self._get_album_path(album), image_data, image_content_type
+            album_id, image_data, image_content_type
         )
 
-    async def delete_album(self, album: Album) -> None:
-        await self.music_file_repository.delete_file(self._get_album_path(album))
-        await self.music_metadata_repository.delete_album(album.id)
+    async def delete_album(self, album_id: AlbumID) -> None:
+        try:
+            await self.music_file_repository.delete_image(album_id)
+        except ImageFileNotFoundException:
+            pass
+        await self.album_repository.delete_album(album_id)
+
+    async def delete_album_image(self, album_id: AlbumID) -> None:
+        await self.music_file_repository.delete_image(album_id)
 
     # Artist
     async def create_artist(
@@ -159,32 +206,42 @@ class MusicService:
         image_data: bytes | None,
         image_content_type: str | None,
     ) -> Artist:
-        artist = await self.music_metadata_repository.create_artist(new_artist)
+        artist = await self.artist_repository.create_artist(new_artist)
         if image_content_type:
             await self.music_file_repository.save_image(
-                self._get_artist_path(artist), image_data, image_content_type
+                artist, image_data, image_content_type
             )
         return artist
 
-    async def get_artist(self, id: int) -> Artist:
-        return await self.music_metadata_repository.get_artist_by_id(id)
+    async def get_artist(self, artist_id: ArtistID) -> Artist:
+        return await self.artist_repository.get_artist_by_id(artist_id)
 
-    async def get_artist_image(self, artist: Artist) -> bytes:
-        return await self.music_file_repository.get_image(self._get_artist_path(artist))
+    async def get_artist_image(self, artist_id: ArtistID) -> bytes:
+        return await self.music_file_repository.get_image(artist_id)
 
-    async def update_artist(self, id: int, artist: NewArtist) -> Artist:
-        return await self.music_metadata_repository.update_artist(id, artist)
+    async def get_artists(self, skip: int = 0, limit: int = 100) -> list[Artist]:
+        return await self.artist_repository.get_artists(skip, limit)
+
+    async def update_artist(self, artist: Artist) -> Artist:
+        return await self.artist_repository.update_artist(artist)
 
     async def update_artist_image(
         self,
-        artist: Artist,
+        artist_id: ArtistID,
         image_data: bytes,
         image_content_type: str,
     ):
+        await self.artist_repository.get_artist_by_id(artist_id)
         await self.music_file_repository.save_image(
-            self._get_artist_path(artist), image_data, image_content_type
+            artist_id, image_data, image_content_type
         )
 
-    async def delete_artist(self, artist: Artist) -> None:
-        await self.music_file_repository.delete_file(self._get_artist_path(artist))
-        await self.music_metadata_repository.delete_artist(artist.id)
+    async def delete_artist(self, artist_id: ArtistID) -> None:
+        try:
+            await self.music_file_repository.delete_image(artist_id)
+        except ImageFileNotFoundException:
+            pass
+        await self.artist_repository.delete_artist(artist_id)
+
+    async def delete_artist_image(self, artist_id: ArtistID) -> None:
+        await self.music_file_repository.delete_image(artist_id)

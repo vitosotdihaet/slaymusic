@@ -1,7 +1,9 @@
 from configs.environment import settings
 from services.music import MusicService
 from repositories.music_file import MinioMusicFileRepository
-from repositories.music_metadata import SQLAlchemyMusicMetadataRepository
+from repositories.track import SQLAlchemyTrackRepository
+from repositories.album import SQLAlchemyAlbumRepository
+from repositories.artist import SQLAlchemyArtistRepository
 from .database import get_session_generator
 
 from contextlib import asynccontextmanager
@@ -17,14 +19,21 @@ async def lifespan(app: FastAPI):
         settings.MINIO_MUSIC_BUCKET,
         settings.MINIO_COVER_BUCKET,
     )
-    app.state.music_metadata_repository = (
-        await SQLAlchemyMusicMetadataRepository.create(
-            await get_session_generator("music")
-        )
+    app.state.track_repository = await SQLAlchemyTrackRepository.create(
+        await get_session_generator("music")
+    )
+    app.state.album_repository = await SQLAlchemyAlbumRepository.create(
+        await get_session_generator("music")
+    )
+    app.state.artist_repository = await SQLAlchemyArtistRepository.create(
+        await get_session_generator("music")
     )
 
     app.state.music_service = MusicService(
-        app.state.music_file_repository, app.state.music_metadata_repository
+        app.state.music_file_repository,
+        app.state.track_repository,
+        app.state.album_repository,
+        app.state.artist_repository,
     )
     yield
 

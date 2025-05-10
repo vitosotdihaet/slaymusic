@@ -1,22 +1,26 @@
-class UseCaseException(Exception):
+class MusicBaseException(Exception):
     pass
 
 
-class InvalidStartException(UseCaseException):
+class InvalidStartException(MusicBaseException):
     pass
 
 
-class MusicFileNotFoundException(UseCaseException):
+class MusicFileNotFoundException(MusicBaseException):
     pass
 
 
-class ArtistNotFoundException(UseCaseException):
+class ImageFileNotFoundException(MusicBaseException):
     pass
 
 
-class TrackNotFoundException(UseCaseException):
+class ArtistNotFoundException(MusicBaseException):
     pass
 
 
-class AlbumNotFoundException(UseCaseException):
+class TrackNotFoundException(MusicBaseException):
+    pass
+
+
+class AlbumNotFoundException(MusicBaseException):
     pass
