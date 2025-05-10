@@ -4,7 +4,6 @@ metadata:
   name: it-project-music-streaming-service-backend
 spec:
   replicas: 1
-  revisionHistoryLimit: 0 # temp decision
   selector:
     matchLabels:
       app: it-project-music-streaming-service-backend

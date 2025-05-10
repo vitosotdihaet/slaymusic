@@ -86,7 +86,7 @@ class MinioMusicFileRepository(IMusicFileRepository):
         self,
         track: Track,
         start: int,
-        end: int,  # TODO content type
+        end: int,
     ) -> AsyncIterator[bytes]:
         content_length = end - start + 1
         async with ClientSession() as session:
@@ -107,7 +107,7 @@ class MinioMusicFileRepository(IMusicFileRepository):
         if isinstance(image, (Album, AlbumID)):
             name = self._get_album_path(image)
         else:
-            name = self._get_artist_path(image)  # TODO content type
+            name = self._get_artist_path(image)
         async with ClientSession() as session:
             try:
                 response = await self.minio_client.get_object(
@@ -125,7 +125,7 @@ class MinioMusicFileRepository(IMusicFileRepository):
                     raise ImageFileNotFoundException(f"Image '{image.id}' not found")
                 raise
 
-    async def get_track_stats(self, track: Track):  # TODO content type
+    async def get_track_stats(self, track: Track):
         try:
             stat = await self.minio_client.stat_object(
                 self.track_bucket, self._get_track_path(track)
