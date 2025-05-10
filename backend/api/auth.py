@@ -12,7 +12,6 @@ ACCESS_TOKEN_EXPIRED_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], bcrypt__rounds=12, deprecated="auto")
 def create_access_token(data: dict):
-    print(SECRET_KEY, ALGORITHM)
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRED_MINUTES)
     to_encode.update({"exp" : expire})
