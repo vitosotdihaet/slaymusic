@@ -19,6 +19,7 @@ class SQLAlchemyTrackRepository(
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
         self.session_factory = session_factory
 
+    @staticmethod
     async def create(
         session_factory: async_sessionmaker[AsyncSession],
     ) -> "SQLAlchemyTrackRepository":

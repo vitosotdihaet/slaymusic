@@ -19,6 +19,7 @@ class MinioMusicFileRepository(IMusicFileRepository):
         self.track_bucket = track_bucket
         self.image_bucket = image_bucket
 
+    @staticmethod
     async def create(
         endpoint: str,
         access_key: str,

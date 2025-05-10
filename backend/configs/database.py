@@ -1,4 +1,4 @@
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine, AsyncEngine
 
 from configs.environment import settings
 
@@ -16,7 +16,7 @@ def get_psql_url(db_name: str) -> str:
     return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{db}"
 
 
-engines: dict[str, any] = {
+engines: dict[str, AsyncEngine] = {
     name: create_async_engine(get_psql_url(name), future=True) for name in DBS
 }
 
