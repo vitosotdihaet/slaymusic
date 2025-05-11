@@ -1,7 +1,8 @@
 from dto.music import Track, NewTrack, TrackID, AlbumID, ArtistID
 from repositories.interfaces import ITrackRepository
-from repositories.base_music_metadata import SQLAlchemyBaseMusicMetadataRepository
-from models.music import MusicBase, TrackModel, AlbumModel, ArtistModel
+from repositories.helpers import RepositoryHelpers
+from models.music import TrackModel, AlbumModel, ArtistModel
+from models.base_model import MusicModelBase
 from configs.database import ensure_tables
 from exceptions.music import (
     AlbumNotFoundException,
@@ -13,9 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy import select, delete
 
 
-class SQLAlchemyTrackRepository(
-    ITrackRepository, SQLAlchemyBaseMusicMetadataRepository
-):
+class SQLAlchemyTrackRepository(ITrackRepository, RepositoryHelpers):
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
         self.session_factory = session_factory
 
@@ -23,7 +22,7 @@ class SQLAlchemyTrackRepository(
     async def create(
         session_factory: async_sessionmaker[AsyncSession],
     ) -> "SQLAlchemyTrackRepository":
-        await ensure_tables(MusicBase, "music")
+        await ensure_tables(MusicModelBase, "music")
         return SQLAlchemyTrackRepository(session_factory)
 
     async def create_track(self, new_track: NewTrack) -> Track:

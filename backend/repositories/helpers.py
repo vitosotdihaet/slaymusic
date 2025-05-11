@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class SQLAlchemyBaseMusicMetadataRepository:
+class RepositoryHelpers:
     # Helpers
     @staticmethod
     async def _execute_query(query, session: AsyncSession):

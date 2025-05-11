@@ -1,7 +1,8 @@
 from dto.music import Artist, NewArtist, ArtistID
 from repositories.interfaces import IArtistRepository
-from repositories.base_music_metadata import SQLAlchemyBaseMusicMetadataRepository
-from models.music import MusicBase, ArtistModel
+from repositories.helpers import RepositoryHelpers
+from models.music import ArtistModel
+from models.base_model import MusicModelBase
 from configs.database import ensure_tables
 from exceptions.music import ArtistNotFoundException
 
@@ -9,9 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy import select, delete
 
 
-class SQLAlchemyArtistRepository(
-    IArtistRepository, SQLAlchemyBaseMusicMetadataRepository
-):
+class SQLAlchemyArtistRepository(IArtistRepository, RepositoryHelpers):
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
         self.session_factory = session_factory
 
@@ -19,7 +18,7 @@ class SQLAlchemyArtistRepository(
     async def create(
         session_factory: async_sessionmaker[AsyncSession],
     ) -> "SQLAlchemyArtistRepository":
-        await ensure_tables(MusicBase, "music")
+        await ensure_tables(MusicModelBase, "music")
         return SQLAlchemyArtistRepository(session_factory)
 
     async def create_artist(self, new_artist: NewArtist) -> Artist:

@@ -1,10 +1,10 @@
 from sqlalchemy import Integer, String, Text, ForeignKey
-from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-MusicBase = declarative_base()
+from models.base_model import MusicModelBase
 
 
-class ArtistModel(MusicBase):
+class ArtistModel(MusicModelBase):
     __tablename__ = "artists"
 
     id: Mapped[int] = mapped_column(
@@ -24,7 +24,7 @@ class ArtistModel(MusicBase):
         return f"<Artist(id={self.id}, name='{self.name}')>"
 
 
-class AlbumModel(MusicBase):
+class AlbumModel(MusicModelBase):
     __tablename__ = "albums"
 
     id: Mapped[int] = mapped_column(
@@ -44,7 +44,7 @@ class AlbumModel(MusicBase):
         return f"<Album(id={self.id}, name='{self.name}', artist_id={self.artist_id})>"
 
 
-class TrackModel(MusicBase):
+class TrackModel(MusicModelBase):
     __tablename__ = "tracks"
 
     id: Mapped[int] = mapped_column(
