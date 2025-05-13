@@ -26,6 +26,11 @@ class Settings(BaseSettings):
 
     BACKEND_PORT: int
 
+    SECRET_KEY: str
+    ALGORITHM: str
+
+    ADMIN_SECRET_KEY: str
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

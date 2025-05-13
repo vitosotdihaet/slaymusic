@@ -1,13 +1,18 @@
 from configs.environment import settings
 from services.music import MusicService
+from services.accounts import AccountService
 from repositories.music_file import MinioMusicFileRepository
 from repositories.track import SQLAlchemyTrackRepository
 from repositories.album import SQLAlchemyAlbumRepository
 from repositories.artist import SQLAlchemyArtistRepository
+from repositories.accounts import SQLAlchemyUserRepository
 from .database import get_session_generator
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from dto.accounts import User, UserMiddleware
 
 
 @asynccontextmanager
@@ -35,8 +40,33 @@ async def lifespan(app: FastAPI):
         app.state.album_repository,
         app.state.artist_repository,
     )
+
+    app.state.accounts_repository = await SQLAlchemyUserRepository.create(
+        await get_session_generator("accounts")
+    )
+
+    app.state.accounts_service = AccountService(app.state.accounts_repository)
+
     yield
 
 
 def get_music_service(request: Request) -> MusicService:
     return request.app.state.music_service
+
+def get_accounts_service(request: Request) -> AccountService:
+    return request.app.state.accounts_service
+
+
+security = HTTPBearer()
+
+# можно юзать как мидлварю для аутентификации пользователей
+# позже можно сделать отдельно для admin/analyst/user
+def check_access(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    account_service: AccountService = Depends(get_accounts_service)
+) -> User:
+    token = credentials.credentials
+    payload = account_service.verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return payload
