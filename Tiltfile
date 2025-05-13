@@ -5,13 +5,13 @@ def make_port_forward(var):
 allow_k8s_contexts('minikube')
 
 env_vars = dict()
-for line in str(read_file('.env')).splitlines():
+for line in str(read_file('backend/.env')).splitlines():
     if line.strip() and not line.startswith('#'):
         key, value = line.strip().split('=', 1)
         env_vars[key] = value
-
+print(env_vars)
 yaml_files = [
-    'k8s/backend.yaml',
+    'k8s/backend.yaml', 
     'k8s/minio.yaml',
     'k8s/psql-accounts.yaml',
     'k8s/psql-music.yaml',
