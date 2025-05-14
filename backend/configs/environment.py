@@ -1,4 +1,3 @@
-from functools import lru_cache
 from pydantic_settings import BaseSettings
 
 
@@ -26,10 +25,8 @@ class Settings(BaseSettings):
     BACKEND_PORT: int
 
     class Config:
-        env_file = '.env'
+        env_file = ".env"
         env_file_encoding = "utf-8"
 
 
-@lru_cache
-def get_environment_variables():
-    return Settings()  # type: ignore
+settings = Settings()  # type: ignore
