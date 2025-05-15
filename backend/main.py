@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from configs.logging import logger
 from configs.environment import settings
 from configs.depends import lifespan
+from api.routers import album, artist, track
 
 from api.routers import user_activity
 
@@ -16,6 +17,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(album.router)
+app.include_router(artist.router)
+app.include_router(track.router)
 
 logger.info("settings are: %s", settings)
 

@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     MINIO_ROOT_PASSWORD: str
     MINIO_PORT: int
     MINIO_WEBUI_PORT: int
+    MINIO_MUSIC_BUCKET: str
+    MINIO_COVER_BUCKET: str
 
     POSTGRESQL_ACCOUNTS_ROOT_USER: str
     POSTGRESQL_ACCOUNTS_ROOT_PASSWORD: str
@@ -29,4 +31,4 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
 
 
-settings = Settings()  # type: ignore
+settings = Settings()
