@@ -5,6 +5,9 @@ from configs.logging import logger
 from configs.environment import settings
 from configs.depends import lifespan
 
+from api.routers import user_activity
+
+
 app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
@@ -15,3 +18,5 @@ app.add_middleware(
 )
 
 logger.info("settings are: %s", settings)
+
+app.include_router(user_activity.router)
