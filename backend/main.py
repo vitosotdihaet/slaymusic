@@ -6,6 +6,7 @@ from configs.environment import settings
 from configs.depends import lifespan
 from api.routers import album, artist, track, genre
 from api.routers import user_activity
+from api.routers import users
 
 
 app = FastAPI(lifespan=lifespan)
@@ -24,3 +25,4 @@ app.include_router(album.router)
 app.include_router(artist.router)
 app.include_router(track.router)
 app.include_router(genre.router)
+app.include_router(users.router)
