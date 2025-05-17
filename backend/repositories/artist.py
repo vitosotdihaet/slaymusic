@@ -1,4 +1,4 @@
-from dto.music import Artist, NewArtist, ArtistID, SearchParams
+from dto.music import Artist, NewArtist, ArtistID, ArtistSearchParams
 from repositories.interfaces import IArtistRepository
 from repositories.helpers import RepositoryHelpers
 from models.music import ArtistModel
@@ -36,7 +36,7 @@ class SQLAlchemyArtistRepository(IArtistRepository, RepositoryHelpers):
                 raise ArtistNotFoundException(f"Artist '{artist.id}' not found")
             return Artist.model_validate(model, from_attributes=True)
 
-    async def get_artists(self, params: SearchParams) -> list[Artist]:
+    async def get_artists(self, params: ArtistSearchParams) -> list[Artist]:
         async with self.session_factory() as session:
             query = select(ArtistModel)
 

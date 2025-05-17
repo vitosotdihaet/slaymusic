@@ -1,4 +1,4 @@
-from dto.music import Album, NewAlbum, AlbumID, ArtistID, SearchParams
+from dto.music import Album, NewAlbum, AlbumID, AlbumSearchParams
 from repositories.interfaces import IAlbumRepository
 from repositories.helpers import RepositoryHelpers
 from models.music import AlbumModel, ArtistModel
@@ -45,30 +45,26 @@ class SQLAlchemyAlbumRepository(IAlbumRepository, RepositoryHelpers):
                 raise AlbumNotFoundException(f"Album '{album.id}' not found")
             return Album.model_validate(model, from_attributes=True)
 
-    async def get_albums_by_artist(
-        self, artist: ArtistID, params: SearchParams
-    ) -> list[Album]:
-        async with self.session_factory() as session:
-            model = await self._get_one_or_none(
-                select(ArtistModel).where(ArtistModel.id == artist.id), session
-            )
-            if not model:
-                raise ArtistNotFoundException(f"Artist '{artist.id}' not found")
-            query = select(AlbumModel).where(AlbumModel.artist_id == artist.id)
-
-            if params.name:
-                query = query.filter(
-                    func.similarity(AlbumModel.name, params.name) >= params.threshold
-                ).order_by(func.similarity(AlbumModel.name, params.name).desc())
-
-            query = query.offset(params.skip).limit(params.limit)
-
-            models = await self._get_all(query, session)
-            return [Album.model_validate(m, from_attributes=True) for m in models]
-
-    async def get_albums(self, params: SearchParams) -> list[Album]:
+    async def get_albums(self, params: AlbumSearchParams) -> list[Album]:
         async with self.session_factory() as session:
             query = select(AlbumModel)
+
+            if params.artist_id:
+                model = await self._get_one_or_none(
+                    select(ArtistModel).where(ArtistModel.id == params.artist_id),
+                    session,
+                )
+                if not model:
+                    raise ArtistNotFoundException(
+                        f"Artist '{params.artist_id}' not found"
+                    )
+                query = query.where(AlbumModel.artist_id == params.artist_id)
+
+            if params.search_start:
+                query = query.where(AlbumModel.release_date >= params.search_start)
+
+            if params.search_end:
+                query = query.where(AlbumModel.release_date <= params.search_end)
 
             if params.name:
                 query = query.filter(

@@ -12,7 +12,7 @@ class TestUserActivityEndpoints:
 
         t["event"] = "keknul"
         response = await async_client.post("/user_activity/", params=t)
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
         response = await async_client.post("/user_activity/")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

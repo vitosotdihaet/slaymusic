@@ -7,7 +7,7 @@ from fastapi import (
     Depends,
 )
 from fastapi.responses import Response
-from dto.music import NewArtist, Artist, ArtistID, SearchParams
+from dto.music import NewArtist, Artist, ArtistID, ArtistSearchParams
 from services.music import MusicService
 from configs.depends import get_music_service
 from exceptions.music import (
@@ -58,7 +58,7 @@ async def get_artist(
 
 @router.get("s/", response_model=list[Artist])
 async def get_artists(
-    params: SearchParams = Depends(),
+    params: ArtistSearchParams = Depends(),
     music_service: MusicService = Depends(get_music_service),
 ):
     try:
@@ -77,7 +77,7 @@ async def get_image(
     try:
         image_bytes = await music_service.get_artist_image(artist_id)
         return Response(content=image_bytes, media_type="image/png")
-    except ImageFileNotFoundException as e:
+    except (ArtistNotFoundException, ImageFileNotFoundException) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 

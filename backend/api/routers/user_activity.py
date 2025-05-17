@@ -80,7 +80,7 @@ async def add_user_activity(
         return await user_activity_service.add(user_activity)
     except EventNotFoundException as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User activity event was not found: {e}",
         )
     except Exception as e:

@@ -24,3 +24,11 @@ class TrackNotFoundException(MusicBaseException):
 
 class AlbumNotFoundException(MusicBaseException):
     pass
+
+
+class GenreNotFoundException(MusicBaseException):
+    pass
+
+
+class GenreNameAlreadyExistsException(MusicBaseException):
+    pass

@@ -3,6 +3,7 @@ from repositories.interfaces import (
     IArtistRepository,
     IAlbumRepository,
     ITrackRepository,
+    IGenreRepository,
 )
 from dto.music import (
     TrackStream,
@@ -16,7 +17,13 @@ from dto.music import (
     AlbumID,
     ArtistID,
     TrackID,
-    SearchParams,
+    NewGenre,
+    Genre,
+    GenreID,
+    GenreSearchParams,
+    ArtistSearchParams,
+    AlbumSearchParams,
+    TrackSearchParams,
 )
 from exceptions.music import (
     InvalidStartException,
@@ -29,6 +36,7 @@ class MusicService:
     track_repository: ITrackRepository
     album_repository: IAlbumRepository
     artist_repository: IArtistRepository
+    genre_repository: IGenreRepository
 
     def __init__(
         self,
@@ -36,11 +44,13 @@ class MusicService:
         track_repository: ITrackRepository,
         album_repository: IAlbumRepository,
         artist_repository: IArtistRepository,
+        genre_repository: IGenreRepository,
     ) -> None:
         self.music_file_repository = music_file_repository
         self.track_repository = track_repository
         self.album_repository = album_repository
         self.artist_repository = artist_repository
+        self.genre_repository = genre_repository
 
     # Track
     async def create_track_single(
@@ -51,7 +61,9 @@ class MusicService:
         image_data: bytes | None,
         image_content_type: str | None,
     ) -> Track:
-        album = await self.album_repository.create_album(new_track)
+        album = await self.album_repository.create_album(
+            NewAlbum.model_validate(new_track.model_dump())
+        )
         track = await self.track_repository.create_track(
             NewTrack.model_validate({**new_track.model_dump(), "album_id": album.id})
         )
@@ -101,17 +113,7 @@ class MusicService:
     async def get_track(self, track_id: TrackID) -> Track:
         return await self.track_repository.get_track_by_id(track_id)
 
-    async def get_tracks_by_album(
-        self, album_id: AlbumID, params: SearchParams
-    ) -> list[Track]:
-        return await self.track_repository.get_tracks_by_album(album_id, params)
-
-    async def get_tracks_by_artist(
-        self, artist_id: ArtistID, params: SearchParams
-    ) -> list[Track]:
-        return await self.track_repository.get_tracks_by_artist(artist_id, params)
-
-    async def get_tracks(self, params: SearchParams) -> list[Track]:
+    async def get_tracks(self, params: TrackSearchParams) -> list[Track]:
         return await self.track_repository.get_tracks(params)
 
     async def get_track_image(self, track_id: TrackID) -> bytes:
@@ -140,6 +142,14 @@ class MusicService:
     async def delete_track(self, track_id: TrackID) -> None:
         track = await self.track_repository.get_track_by_id(track_id)
         await self.music_file_repository.delete_track(track)
+        tracks = await self.get_tracks(TrackSearchParams(album_id=track.album_id))
+        if len(tracks) == 1:
+            try:
+                await self.music_file_repository.delete_image(
+                    AlbumID(id=track.album_id)
+                )
+            except ImageFileNotFoundException:
+                pass
         await self.track_repository.delete_track(track_id)
 
     async def delete_track_image(self, track_id: TrackID) -> None:
@@ -163,12 +173,7 @@ class MusicService:
     async def get_album(self, album_id: AlbumID) -> Album:
         return await self.album_repository.get_album_by_id(album_id)
 
-    async def get_albums_by_artist(
-        self, artist_id: ArtistID, params: SearchParams
-    ) -> list[Album]:
-        return await self.album_repository.get_albums_by_artist(artist_id, params)
-
-    async def get_albums(self, params: SearchParams) -> list[Album]:
+    async def get_albums(self, params: AlbumSearchParams) -> list[Album]:
         return await self.album_repository.get_albums(params)
 
     async def get_album_image(self, album_id: AlbumID) -> bytes:
@@ -190,11 +195,14 @@ class MusicService:
         )
 
     async def delete_album(self, album_id: AlbumID) -> None:
-        await self.album_repository.delete_album(album_id)
+        tracks = await self.get_tracks(TrackSearchParams(album_id=album_id.id))
+        for track in tracks:
+            await self.delete_track(track)
         try:
             await self.music_file_repository.delete_image(album_id)
         except ImageFileNotFoundException:
             pass
+        await self.album_repository.delete_album(album_id)
 
     async def delete_album_image(self, album_id: AlbumID) -> None:
         await self.album_repository.delete_album(album_id)
@@ -221,7 +229,7 @@ class MusicService:
         await self.artist_repository.get_artist_by_id(artist_id)
         return await self.music_file_repository.get_image(artist_id)
 
-    async def get_artists(self, params: SearchParams) -> list[Artist]:
+    async def get_artists(self, params: ArtistSearchParams) -> list[Artist]:
         return await self.artist_repository.get_artists(params)
 
     async def update_artist(self, artist: Artist) -> Artist:
@@ -239,6 +247,9 @@ class MusicService:
         )
 
     async def delete_artist(self, artist_id: ArtistID) -> None:
+        albums = await self.get_albums(AlbumSearchParams(artist_id=artist_id.id))
+        for album in albums:
+            await self.delete_album(album)
         await self.artist_repository.delete_artist(artist_id)
         try:
             await self.music_file_repository.delete_image(artist_id)
@@ -248,3 +259,22 @@ class MusicService:
     async def delete_artist_image(self, artist_id: ArtistID) -> None:
         await self.artist_repository.get_artist_by_id(artist_id)
         await self.music_file_repository.delete_image(artist_id)
+
+    # Genre
+    async def create_genre(
+        self,
+        new_genre: NewGenre,
+    ) -> Genre:
+        return await self.genre_repository.create_genre(new_genre)
+
+    async def get_genre(self, genre_id: GenreID) -> Genre:
+        return await self.genre_repository.get_genre_by_id(genre_id)
+
+    async def get_genres(self, params: GenreSearchParams) -> list[Genre]:
+        return await self.genre_repository.get_genres(params)
+
+    async def update_genre(self, genre: Genre) -> Genre:
+        return await self.genre_repository.update_genre(genre)
+
+    async def delete_genre(self, genre_id: GenreID) -> None:
+        await self.genre_repository.delete_genre(genre_id)

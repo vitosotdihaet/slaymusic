@@ -10,31 +10,27 @@ from fastapi import (
 from fastapi.responses import StreamingResponse, Response
 from dto.music import (
     Track,
-    Artist,
-    Album,
     NewSingle,
     NewTrack,
     TrackID,
-    AlbumID,
-    ArtistID,
-    SearchParams,
+    TrackSearchParams,
 )
 from services.music import MusicService
 from configs.depends import get_music_service
 from exceptions.music import (
     InvalidStartException,
     MusicFileNotFoundException,
-    MusicBaseException,
     ArtistNotFoundException,
     TrackNotFoundException,
     AlbumNotFoundException,
     ImageFileNotFoundException,
+    GenreNotFoundException,
 )
 
 router = APIRouter(prefix="/track", tags=["track"])
 
 
-@router.post("/single", response_model=Track, status_code=status.HTTP_201_CREATED)
+@router.post("/single/", response_model=Track, status_code=status.HTTP_201_CREATED)
 async def create_single(
     track: NewSingle = Depends(),
     track_file: UploadFile = File(),
@@ -56,7 +52,7 @@ async def create_single(
         return await music_service.create_track_single(
             track, data, content_type, cover_bytes, cover_content_type
         )
-    except MusicBaseException as e:
+    except (GenreNotFoundException, ArtistNotFoundException) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
@@ -71,12 +67,16 @@ async def create_track(
 
     try:
         return await music_service.create_track_to_album(new_track, data, content_type)
-    except (AlbumNotFoundException, ArtistNotFoundException) as e:
+    except (
+        AlbumNotFoundException,
+        ArtistNotFoundException,
+        GenreNotFoundException,
+    ) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get(
-    "/stream",
+    "/stream/",
     response_model=None,
     status_code=206,
 )
@@ -129,38 +129,18 @@ async def get_track(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.get("s/by_album", response_model=list[Album])
-async def get_track_by_album(
-    album_id: AlbumID = Depends(),
-    params: SearchParams = Depends(),
-    music_service: MusicService = Depends(get_music_service),
-):
-    try:
-        return await music_service.get_tracks_by_album(album_id, params)
-    except AlbumNotFoundException as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
-@router.get("s/by_artist", response_model=list[Album])
-async def get_track_by_artist(
-    artist_id: ArtistID = Depends(),
-    params: SearchParams = Depends(),
-    music_service: MusicService = Depends(get_music_service),
-):
-    try:
-        return await music_service.get_tracks_by_artist(artist_id, params)
-    except ArtistNotFoundException as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
-@router.get("s/", response_model=list[Artist])
+@router.get("s/", response_model=list[Track])
 async def get_tracks(
-    params: SearchParams = Depends(),
+    params: TrackSearchParams = Depends(),
     music_service: MusicService = Depends(get_music_service),
 ):
     try:
         return await music_service.get_tracks(params)
-    except MusicBaseException as e:
+    except (
+        ArtistNotFoundException,
+        AlbumNotFoundException,
+        GenreNotFoundException,
+    ) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
@@ -189,6 +169,7 @@ async def update_track(
         AlbumNotFoundException,
         ArtistNotFoundException,
         TrackNotFoundException,
+        GenreNotFoundException,
     ) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -216,14 +197,18 @@ async def update_track_file(
     track_file: UploadFile = File(),
     music_service: MusicService = Depends(get_music_service),
 ):
-    cover_bytes = await track_file.read()
-    cover_content_type = track_file.content_type
+    file_bytes = await track_file.read()
+    file_content_type = track_file.content_type
 
     try:
         return await music_service.update_track_file(
-            track_id, cover_bytes, cover_content_type
+            track_id, file_bytes, file_content_type
         )
-    except (TrackNotFoundException, MusicFileNotFoundException) as e:
+    except (
+        TrackNotFoundException,
+        MusicFileNotFoundException,
+        GenreNotFoundException,
+    ) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 

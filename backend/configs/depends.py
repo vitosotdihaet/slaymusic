@@ -5,6 +5,7 @@ from repositories.music_file import MinioMusicFileRepository
 from repositories.track import SQLAlchemyTrackRepository
 from repositories.album import SQLAlchemyAlbumRepository
 from repositories.artist import SQLAlchemyArtistRepository
+from repositories.genre import SQLAlchemyGenreRepository
 from repositories.user_activity import SQLAlchemyUserActivityRepository
 from configs.database import get_session_generator
 from contextlib import asynccontextmanager
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI):
     app.state.user_activity_service = UserActivityService(
         app.state.user_activity_repository
     )
+
     app.state.music_file_repository = await MinioMusicFileRepository.create(
         "minio-service:" + str(settings.MINIO_PORT),
         settings.MINIO_ROOT_USER,
@@ -35,12 +37,16 @@ async def lifespan(app: FastAPI):
     app.state.artist_repository = await SQLAlchemyArtistRepository.create(
         await get_session_generator("music")
     )
+    app.state.genre_repository = await SQLAlchemyGenreRepository.create(
+        await get_session_generator("music")
+    )
 
     app.state.music_service = MusicService(
         app.state.music_file_repository,
         app.state.track_repository,
         app.state.album_repository,
         app.state.artist_repository,
+        app.state.genre_repository,
     )
     yield
 

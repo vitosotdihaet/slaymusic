@@ -7,7 +7,7 @@ from fastapi import (
     Depends,
 )
 from fastapi.responses import Response
-from dto.music import NewAlbum, Album, AlbumID, ArtistID, SearchParams
+from dto.music import NewAlbum, Album, AlbumID, AlbumSearchParams
 from services.music import MusicService
 from configs.depends import get_music_service
 from exceptions.music import (
@@ -57,31 +57,19 @@ async def get_album(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.get("s/by_artist", response_model=list[Album])
-async def get_albums_by_artist(
-    artist_id: ArtistID = Depends(),
-    params: SearchParams = Depends(),
-    music_service: MusicService = Depends(get_music_service),
-):
-    try:
-        return await music_service.get_albums_by_artist(artist_id, params)
-    except ArtistNotFoundException as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
 @router.get("s/", response_model=list[Album])
 async def get_albums(
-    params: SearchParams = Depends(),
+    params: AlbumSearchParams = Depends(),
     music_service: MusicService = Depends(get_music_service),
 ):
     try:
         return await music_service.get_albums(params)
-    except MusicBaseException as e:
+    except ArtistNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get(
-    "/image", responses={200: {"content": {"image/png": {}}}}, response_class=Response
+    "/image/", responses={200: {"content": {"image/png": {}}}}, response_class=Response
 )
 async def get_album_image(
     album_id: AlbumID = Depends(),
