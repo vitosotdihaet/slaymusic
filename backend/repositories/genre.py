@@ -18,8 +18,8 @@ class SQLAlchemyGenreRepository(IGenreRepository, RepositoryHelpers):
     async def create(
         session_factory: async_sessionmaker[AsyncSession],
     ) -> "SQLAlchemyGenreRepository":
-        await ensure_tables(MusicModelBase, "music")
         await ensure_extensions("music")
+        await ensure_tables(MusicModelBase, "music")
         return SQLAlchemyGenreRepository(session_factory)
 
     async def create_genre(self, new_genre: NewGenre) -> Genre:

@@ -18,8 +18,8 @@ class SQLAlchemyAlbumRepository(IAlbumRepository, RepositoryHelpers):
     async def create(
         session_factory: async_sessionmaker[AsyncSession],
     ) -> "SQLAlchemyAlbumRepository":
-        await ensure_tables(MusicModelBase, "music")
         await ensure_extensions("music")
+        await ensure_tables(MusicModelBase, "music")
         return SQLAlchemyAlbumRepository(session_factory)
 
     async def create_album(self, new_album: NewAlbum) -> Album:

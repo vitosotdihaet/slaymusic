@@ -45,13 +45,6 @@ k8s_resource(
     ]
 )
 
-k8s_resource(
-    'postgres-music',
-    port_forwards=[
-        '5432'+':5432'
-    ]
-) # TODO clean 
-
 # Docker build configuration
 docker_build(
     'it-project-music-streaming-service-backend-image',

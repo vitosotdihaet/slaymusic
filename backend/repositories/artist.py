@@ -18,8 +18,8 @@ class SQLAlchemyArtistRepository(IArtistRepository, RepositoryHelpers):
     async def create(
         session_factory: async_sessionmaker[AsyncSession],
     ) -> "SQLAlchemyArtistRepository":
-        await ensure_tables(MusicModelBase, "music")
         await ensure_extensions("music")
+        await ensure_tables(MusicModelBase, "music")
         return SQLAlchemyArtistRepository(session_factory)
 
     async def create_artist(self, new_artist: NewArtist) -> Artist:

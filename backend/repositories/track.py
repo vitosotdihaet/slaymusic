@@ -23,8 +23,8 @@ class SQLAlchemyTrackRepository(ITrackRepository, RepositoryHelpers):
     async def create(
         session_factory: async_sessionmaker[AsyncSession],
     ) -> "SQLAlchemyTrackRepository":
-        await ensure_tables(MusicModelBase, "music")
         await ensure_extensions("music")
+        await ensure_tables(MusicModelBase, "music")
         return SQLAlchemyTrackRepository(session_factory)
 
     async def create_track(self, new_track: NewTrack) -> Track:
