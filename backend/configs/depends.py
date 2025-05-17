@@ -13,7 +13,7 @@ from configs.database import get_session_generator
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from dto.accounts import User
+from dto.accounts import UserMiddleware
 
 
 @asynccontextmanager
@@ -80,7 +80,7 @@ security = HTTPBearer()
 def check_access(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     account_service: AccountService = Depends(get_accounts_service),
-) -> User:
+) -> UserMiddleware:
     token = credentials.credentials
     payload = account_service.verify_token(token)
     if not payload:

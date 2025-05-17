@@ -54,9 +54,8 @@ async def register(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err)
         )
 
-    access_token = account_service.create_access_token(
-        data={"sub": str(new_user.id), "is_admin": False}
-    )
+    user_middleware = dto.UserMiddleware(id=new_user.id, is_admin=False)
+    access_token = account_service.create_access_token(user_middleware)
 
     return dto.LoginRegister(token=access_token, next="/home")
 
@@ -79,8 +78,7 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials"
         )
 
-    access_token = account_service.create_access_token(
-        data={"sub": str(user.id), "is_admin": False}
-    )
+    user_middleware = dto.UserMiddleware(id=user.id, is_admin=False)
+    access_token = account_service.create_access_token(user_middleware)
 
     return dto.LoginRegister(token=access_token, next="/home")

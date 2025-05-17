@@ -6,6 +6,7 @@ from dto.accounts import (
     UserID,
     NewRoleUser,
     UserUsername,
+    UserMiddleware,
     LoginUserWithID,
     Playlist,
     PlaylistID,
@@ -14,9 +15,6 @@ from dto.accounts import (
     NewPlaylistTrack,
 )
 from repositories.interfaces import IUserRepository
-from exceptions.accounts import (
-    InvalidTokenException,
-)
 from typing import Optional
 from sqlalchemy.exc import IntegrityError
 from exceptions.accounts import UserAlreadyExist
@@ -59,11 +57,11 @@ class AccountService:
     async def delete_user(self, user_id: UserID) -> None:
         await self.user_repository.delete_user(user_id)
 
-    def create_access_token(self, data: dict) -> str:
-        to_encode = data.copy()
+    def create_access_token(self, data: UserMiddleware) -> str:
         expire = datetime.now() + timedelta(
             minutes=env.settings.AUTH_ACCESS_TOKEN_EXPIRED_MINUTES
         )
+        to_encode = data.model_dump()
         to_encode.update({"exp": expire})
         return jwt.encode(
             to_encode,
@@ -71,14 +69,15 @@ class AccountService:
             algorithm=env.settings.AUTH_ALGORITHM,
         )
 
-    def verify_token(self, token: str) -> Optional[dict]:
+    def verify_token(self, token: str) -> Optional[UserMiddleware]:
         try:
             payload = jwt.decode(
                 token,
                 key=env.settings.AUTH_SECRET_KEY,
                 algorithms=[env.settings.AUTH_ALGORITHM],
             )
-            return payload
+
+            return UserMiddleware(**payload)
         except JWTError:
             return None
 
@@ -87,18 +86,6 @@ class AccountService:
 
     def get_hashed_password(self, entered_password: str) -> str:
         return self.pwd_context.hash(entered_password)
-
-    async def get_user_from_token(self, token: str) -> User:
-        payload = self.verify_token(token)
-        if payload is None or "sub" not in payload:
-            raise InvalidTokenException()
-
-        try:
-            user_id = UserID(id=payload["sub"])
-        except Exception:
-            raise InvalidTokenException()
-
-        return await self.user_repository.get_user_by_id(user_id)
 
     # === Playlist-related methods ===
 
