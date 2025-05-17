@@ -26,10 +26,11 @@ class Settings(BaseSettings):
 
     BACKEND_PORT: int
 
-    SECRET_KEY: str
-    ALGORITHM: str
+    AUTH_SECRET_KEY: str
+    AUTH_ALGORITHM: str
 
-    ADMIN_SECRET_KEY: str
+    AUTH_ADMIN_SECRET_KEY: str
+    AUTH_ACCESS_TOKEN_EXPIRED_MINUTES: int
 
     class Config:
         env_file = ".env"

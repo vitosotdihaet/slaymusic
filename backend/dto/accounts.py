@@ -55,3 +55,30 @@ class LoginRegister(BaseModel):
 class UserMiddleware(BaseModel):
     id: int
     is_admin: bool
+
+
+class PlaylistID(BaseModel):
+    playlist_id: int
+
+
+class NewPlaylist(BaseModel):
+    author_id: int
+    name: str
+
+
+class Playlist(BaseModel):
+    playlist_id: int
+    author_id: int
+    name: str
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+
+class NewPlaylistTrack(BaseModel):
+    playlist_id: int
+    track_id: int
+
+
+class PlaylistTrack(BaseModel):
+    playlist_id: int
+    track_id: int

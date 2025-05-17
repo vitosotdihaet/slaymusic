@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from dto.accounts import User, UserMiddleware
+from dto.accounts import User
 
 
 @asynccontextmanager
@@ -53,17 +53,19 @@ async def lifespan(app: FastAPI):
 def get_music_service(request: Request) -> MusicService:
     return request.app.state.music_service
 
+
 def get_accounts_service(request: Request) -> AccountService:
     return request.app.state.accounts_service
 
 
 security = HTTPBearer()
 
+
 # можно юзать как мидлварю для аутентификации пользователей
 # позже можно сделать отдельно для admin/analyst/user
 def check_access(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    account_service: AccountService = Depends(get_accounts_service)
+    account_service: AccountService = Depends(get_accounts_service),
 ) -> User:
     token = credentials.credentials
     payload = account_service.verify_token(token)

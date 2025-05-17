@@ -10,7 +10,18 @@ from dto.music import (
     AlbumID,
     TrackID,
 )
-from dto.accounts import User, NewUser, UserID, NewRoleUser, UserUsername, LoginUserWithID
+from dto.accounts import (
+    User,
+    UserID,
+    NewRoleUser,
+    UserUsername,
+    LoginUserWithID,
+    NewPlaylist,
+    Playlist,
+    PlaylistID,
+    PlaylistTrack,
+    NewPlaylistTrack,
+)
 
 from typing import AsyncIterator, Protocol
 
@@ -79,3 +90,19 @@ class IUserRepository(Protocol):
     async def get_users(self, skip: int = 0, limit: int = 100) -> list[User]: ...
     async def update_user(self, new_user: User) -> User: ...
     async def delete_user(self, user: UserID) -> None: ...
+
+    async def create_playlist(self, new_playlist: NewPlaylist) -> Playlist: ...
+    async def get_playlist_by_id(self, playlist: PlaylistID) -> Playlist: ...
+    async def get_playlists_by_user(self, user: UserID) -> list[Playlist]: ...
+    async def get_tracks_by_playlist(
+        self, playlist: PlaylistID
+    ) -> list[PlaylistTrack]: ...
+    async def update_playlist(self, playlist: Playlist) -> Playlist: ...
+    async def delete_playlist(self, playlist: PlaylistID) -> None: ...
+
+    async def add_track_to_playlist(
+        self, new_track: NewPlaylistTrack
+    ) -> PlaylistTrack: ...
+    async def remove_track_from_playlist(
+        self, playlist_track: PlaylistTrack
+    ) -> None: ...
