@@ -1,10 +1,8 @@
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, ForeignKey, select
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from configs.logging import logger
 from models.base_model import UserActivityBase
@@ -32,14 +30,18 @@ class UserActivityModel(UserActivityBase):
 
 async def add_initial_events(session: AsyncSession):
     try:
+        names = ["play", "skip", "add to playlist"]
         async with session.begin():
-            session.add_all(
-                [
-                    EventModel(name="play"),
-                    EventModel(name="skip"),
-                    EventModel(name="add to playlist"),
-                ]
+            existing = (
+                (
+                    await session.execute(
+                        select(EventModel.name).where(EventModel.name.in_(names))
+                    )
+                )
+                .scalars()
+                .all()
             )
-            await session.commit()
+            to_create = [EventModel(name=n) for n in names if n not in existing]
+            session.add_all(to_create)
     except Exception as e:
         logger.warning("could not insert initial events: %s", e)

@@ -24,8 +24,8 @@ spec:
                 host="$2"
                 port="$3"
                 echo -n "Waiting for $name..."
-                until nc -z "$host" "$port"; do
-                  sleep 1
+                until nc -z "$host" "$port" 2>/dev/null; do
+                  sleep 0.25
                 done
                 echo " Done"
               }
