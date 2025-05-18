@@ -54,7 +54,7 @@ class LoginRegister(BaseModel):
 
 class UserMiddleware(BaseModel):
     id: int
-    is_admin: bool
+    role: UserRole
 
 
 class PlaylistID(BaseModel):

@@ -28,7 +28,6 @@ class Settings(BaseSettings):
 
     AUTH_SECRET_KEY: str
     AUTH_ALGORITHM: str
-
     AUTH_ADMIN_SECRET_KEY: str
     AUTH_ACCESS_TOKEN_EXPIRED_MINUTES: int
 

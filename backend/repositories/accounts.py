@@ -81,9 +81,9 @@ class SQLAlchemyUserRepository(IUserRepository, RepositoryHelpers):
                 raise UserNotFoundException(f"User '{user.id}' not found")
 
     # --- PLAYLIST METHODS ---
-    async def create_playlist(self, new_pl: NewPlaylist) -> Playlist:
+    async def create_playlist(self, new_playlist: NewPlaylist) -> Playlist:
         async with self.session_factory() as session:
-            to_add = PlaylistModel(**new_pl.model_dump())
+            to_add = PlaylistModel(**new_playlist.model_dump())
             added = await self._add_and_commit(to_add, session)
             return Playlist.model_validate(added, from_attributes=True)
 
@@ -117,19 +117,19 @@ class SQLAlchemyUserRepository(IUserRepository, RepositoryHelpers):
                 PlaylistTrack.model_validate(m, from_attributes=True) for m in models
             ]
 
-    async def update_playlist(self, pl: Playlist) -> Playlist:
+    async def update_playlist(self, playlist: Playlist) -> Playlist:
         async with self.session_factory() as session:
             model = await self._get_one_or_none(
                 select(PlaylistModel).where(
-                    PlaylistModel.playlist_id == pl.playlist_id
+                    PlaylistModel.playlist_id == playlist.playlist_id
                 ),
                 session,
             )
             if not model:
                 raise PlaylistNotFoundException(
-                    f"Playlist '{pl.playlist_id}' not found"
+                    f"Playlist '{playlist.playlist_id}' not found"
                 )
-            updated = await self._update_and_commit(model, pl, session)
+            updated = await self._update_and_commit(model, playlist, session)
             return Playlist.model_validate(updated, from_attributes=True)
 
     async def delete_playlist(self, playlist: PlaylistID) -> None:
@@ -143,20 +143,20 @@ class SQLAlchemyUserRepository(IUserRepository, RepositoryHelpers):
                     f"Playlist '{playlist.playlist_id}' not found"
                 )
 
-    async def add_track_to_playlist(self, new_pt: NewPlaylistTrack) -> PlaylistTrack:
+    async def add_track_to_playlist(self, new_track: NewPlaylistTrack) -> PlaylistTrack:
         async with self.session_factory() as session:
-            to_add = PlaylistTrackModel(**new_pt.model_dump())
+            to_add = PlaylistTrackModel(**new_track.model_dump())
             added = await self._add_and_commit(to_add, session)
             return PlaylistTrack.model_validate(added, from_attributes=True)
 
-    async def remove_track_from_playlist(self, pt: PlaylistTrack) -> None:
+    async def remove_track_from_playlist(self, playlist_track: PlaylistTrack) -> None:
         async with self.session_factory() as session:
             query = delete(PlaylistTrackModel).where(
-                PlaylistTrackModel.playlist_id == pt.playlist_id,
-                PlaylistTrackModel.track_id == pt.track_id,
+                PlaylistTrackModel.playlist_id == playlist_track.playlist_id,
+                PlaylistTrackModel.track_id == playlist_track.track_id,
             )
             deleted = await self._delete_and_commit(query, session)
             if deleted == 0:
                 raise PlaylistNotFoundException(
-                    f"Track {pt.track_id} not found in playlist {pt.playlist_id}"
+                    f"Track {playlist_track.track_id} not found in playlist {playlist_track.playlist_id}"
                 )

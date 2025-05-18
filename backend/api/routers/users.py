@@ -17,7 +17,7 @@ router = APIRouter(prefix="/accounts", tags=["accounts"])
 async def get_user(
     user_id: int,
     account_service: AccountService = Depends(get_accounts_service),
-    check_access=Depends(check_access),
+    user_data=Depends(check_access),
 ):
     user: Optional[dto.User] = None
     try:
@@ -54,7 +54,7 @@ async def register(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err)
         )
 
-    user_middleware = dto.UserMiddleware(id=new_user.id, is_admin=False)
+    user_middleware = dto.UserMiddleware(id=new_user.id, role=dto.UserRole.user)
     access_token = account_service.create_access_token(user_middleware)
 
     return dto.LoginRegister(token=access_token, next="/home")
@@ -78,7 +78,7 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials"
         )
 
-    user_middleware = dto.UserMiddleware(id=user.id, is_admin=False)
+    user_middleware = dto.UserMiddleware(id=user.id, role=dto.UserRole.user)
     access_token = account_service.create_access_token(user_middleware)
 
     return dto.LoginRegister(token=access_token, next="/home")
