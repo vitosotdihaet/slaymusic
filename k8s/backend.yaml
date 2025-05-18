@@ -12,30 +12,6 @@ spec:
       labels:
         app: it-project-music-streaming-service-backend
     spec:
-      initContainers:
-        - name: wait-for-dependencies
-          image: busybox:latest
-          command:
-            - sh
-            - -c
-            - |
-              check_service() {
-                name="$1"
-                host="$2"
-                port="$3"
-                echo -n "Waiting for $name..."
-                until nc -z "$host" "$port" 2>/dev/null; do
-                  sleep 0.25
-                done
-                echo " Done"
-              }
-
-              check_service "postgres-accounts-service" "postgres-accounts-service" "$POSTGRESQL_ACCOUNTS_PORT"
-              check_service "postgres-music-service" "postgres-music-service" "$POSTGRESQL_MUSIC_PORT"
-              check_service "postgres-user-activity-service" "postgres-user-activity-service" "$POSTGRESQL_USER_ACTIVITY_PORT"
-              check_service "minio-service" "minio-service" "$MINIO_PORT"
-
-              echo "All dependencies are up!"
       containers:
         - name: it-project-music-streaming-service-backend
           image: it-project-music-streaming-service-backend-image
@@ -50,6 +26,6 @@ spec:
     app: it-project-music-streaming-service-backend
   ports:
     - protocol: TCP
-      port: $BACKEND_PORT
-      targetPort: $BACKEND_PORT
+      port: 8000
+      targetPort: 8000
   type: NodePort

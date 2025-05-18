@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-accounts-service
+spec:
+  ports:
+  - protocol: TCP
+    name: db
+    port: $POSTGRESQL_ACCOUNTS_PORT
+    targetPort: 5432 
+  clusterIP: None
+  selector:
+    app: postgres

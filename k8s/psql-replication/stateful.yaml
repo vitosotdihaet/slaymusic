@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-accounts-service
+spec:
+  serviceName: "postgres-accounts-service"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: postgres-accounts-service
+  template:
+    metadata:
+      labels:
+        app: postgres-accounts-service
+    spec:
+      initContainers:
+        - name: init-replica
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              apt-get update && \
+              apt-get install -y postgresql-client && \
+              rm -rf /var/lib/apt/lists/*
+              if [ "$(hostname)" != "postgres-0" ]; then
+                echo "Setting up replica..."
+                rm -rf /var/lib/postgresql/data/*
+                PGPASSWORD=$POSTGRES_PASSWORD pg_basebackup -h postgres-0.postgres -D /var/lib/postgresql/data -U replicator -Fp -Xs -P -R
+              else
+                echo "Primary node — skipping replica setup."
+              fi
+          envFrom:
+            - secretRef:
+                name: postgres-secrets
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      containers:
+        - name: postgres
+          image: postgres:15
+          envFrom:
+            - secretRef:
+                name: postgres-secrets
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: config
+              mountPath: /etc/postgresql
+          args:
+            - "-c"
+            - "config_file=/etc/postgresql/postgresql.conf"
+      volumes:
+        - name: config
+          configMap:
+            name: postgres-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

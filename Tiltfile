@@ -13,7 +13,7 @@ for line in str(read_file('.env')).splitlines():
 yaml_files = [
     'k8s/backend.yaml',
     'k8s/minio.yaml',
-    'k8s/psql-accounts.yaml',
+    'k8s/psql-accounts-local.yaml',
     'k8s/psql-music.yaml',
     'k8s/psql-user-activity.yaml'
 ]
