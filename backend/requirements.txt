@@ -3,5 +3,6 @@ uvicorn
 python-dotenv
 miniopy-async
 pydantic-settings
+python-multipart
 sqlalchemy
 asyncpg
