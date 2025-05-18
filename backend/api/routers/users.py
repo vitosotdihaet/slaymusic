@@ -12,7 +12,6 @@ from typing import Optional
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 
 
-# оставим тут пока с user_id в path, потом можно из мидлвари доставать
 @router.get("/user/{user_id}", response_model=dto.User, status_code=status.HTTP_200_OK)
 async def get_user(
     user_id: int,
