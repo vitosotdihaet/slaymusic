@@ -72,6 +72,7 @@ def get_accounts_service(request: Request) -> AccountService:
 def get_music_service(request: Request) -> MusicService:
     return request.app.state.music_service
 
+
 security = HTTPBearer()
 
 
@@ -86,4 +87,3 @@ def check_access(
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
     return payload
-
