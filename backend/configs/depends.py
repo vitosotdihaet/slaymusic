@@ -6,10 +6,14 @@ from repositories.track import SQLAlchemyTrackRepository
 from repositories.album import SQLAlchemyAlbumRepository
 from repositories.artist import SQLAlchemyArtistRepository
 from repositories.genre import SQLAlchemyGenreRepository
+from services.accounts import AccountService
 from repositories.user_activity import SQLAlchemyUserActivityRepository
+from repositories.accounts import SQLAlchemyUserRepository
 from configs.database import get_session_generator
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from dto.accounts import UserMiddleware
 
 
 @asynccontextmanager
@@ -20,6 +24,12 @@ async def lifespan(app: FastAPI):
     app.state.user_activity_service = UserActivityService(
         app.state.user_activity_repository
     )
+
+    app.state.accounts_repository = await SQLAlchemyUserRepository.create(
+        await get_session_generator("accounts")
+    )
+
+    app.state.accounts_service = AccountService(app.state.accounts_repository)
 
     app.state.music_file_repository = await MinioMusicFileRepository.create(
         "minio-service:" + str(settings.MINIO_PORT),
@@ -55,5 +65,25 @@ def get_user_activity_service(request: Request) -> UserActivityService:
     return request.app.state.user_activity_service
 
 
+def get_accounts_service(request: Request) -> AccountService:
+    return request.app.state.accounts_service
+
+
 def get_music_service(request: Request) -> MusicService:
     return request.app.state.music_service
+
+
+security = HTTPBearer()
+
+
+# можно юзать как мидлварю для аутентификации пользователей
+# позже можно сделать отдельно для admin/analyst/user
+def check_access(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    account_service: AccountService = Depends(get_accounts_service),
+) -> UserMiddleware:
+    token = credentials.credentials
+    payload = account_service.verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return payload

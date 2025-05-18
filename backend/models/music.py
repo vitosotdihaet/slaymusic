@@ -1,5 +1,5 @@
-from sqlalchemy import Integer, String, Text, ForeignKey, Index, Date, event
-from sqlalchemy.orm import relationship, Mapped, mapped_column, Session
+from sqlalchemy import Integer, String, Text, ForeignKey, Index, Date
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from models.base_model import MusicModelBase
 
