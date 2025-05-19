@@ -3,7 +3,7 @@ from dto.accounts import (
     UserID,
     NewRoleUser,
     UserUsername,
-    LoginUserWithID,
+    FullUser,
     NewPlaylist,
     Playlist,
     PlaylistID,
@@ -48,14 +48,14 @@ class SQLAlchemyUserRepository(IUserRepository, RepositoryHelpers):
                 raise UserNotFoundException(f"User '{user.id}' not found")
             return User.model_validate(model, from_attributes=True)
 
-    async def get_user_by_username(self, user: UserUsername) -> LoginUserWithID:
+    async def get_user_by_username(self, user: UserUsername) -> FullUser:
         async with self.session_factory() as session:
             model = await self._get_one_or_none(
                 select(UserModel).where(UserModel.username == user.username), session
             )
             if not model:
                 raise UserNotFoundException(f"User '{user.username}' not found")
-            return LoginUserWithID.model_validate(model, from_attributes=True)
+            return FullUser.model_validate(model, from_attributes=True)
 
     async def get_users(self, skip: int = 0, limit: int = 100) -> list[User]:
         async with self.session_factory() as session:

@@ -64,7 +64,7 @@ async def login(
     login_user: dto.LoginUser,
     account_service: AccountService = Depends(get_accounts_service),
 ):
-    user: Optional[dto.LoginUserWithID] = None
+    user: Optional[dto.FullUser] = None
     try:
         user = await account_service.get_user_by_username(
             dto.UserUsername(username=login_user.username)
@@ -77,7 +77,7 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials"
         )
 
-    user_middleware = dto.UserMiddleware(id=user.id, role=dto.UserRole.user)
+    user_middleware = dto.UserMiddleware(id=user.id, role=user.role)
     access_token = account_service.create_access_token(user_middleware)
 
     return dto.LoginRegister(token=access_token, next="/home")

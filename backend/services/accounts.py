@@ -7,7 +7,7 @@ from dto.accounts import (
     NewRoleUser,
     UserUsername,
     UserMiddleware,
-    LoginUserWithID,
+    FullUser,
     Playlist,
     PlaylistID,
     NewPlaylist,
@@ -45,7 +45,7 @@ class AccountService:
     async def get_user(self, user_id: UserID) -> User:
         return await self.user_repository.get_user_by_id(user_id)
 
-    async def get_user_by_username(self, username: UserUsername) -> LoginUserWithID:
+    async def get_user_by_username(self, username: UserUsername) -> FullUser:
         return await self.user_repository.get_user_by_username(username)
 
     async def get_users(self, skip: int = 0, limit: int = 100) -> list[User]:
