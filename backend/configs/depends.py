@@ -38,16 +38,16 @@ async def lifespan(app: FastAPI):
         settings.MINIO_MUSIC_BUCKET,
         settings.MINIO_COVER_BUCKET,
     )
-    app.state.track_repository = await SQLAlchemyTrackRepository.create(
+    app.state.track_repository = SQLAlchemyTrackRepository(
         await get_session_generator("music")
     )
-    app.state.album_repository = await SQLAlchemyAlbumRepository.create(
+    app.state.album_repository = SQLAlchemyAlbumRepository(
         await get_session_generator("music")
     )
-    app.state.artist_repository = await SQLAlchemyArtistRepository.create(
+    app.state.artist_repository = SQLAlchemyArtistRepository(
         await get_session_generator("music")
     )
-    app.state.genre_repository = await SQLAlchemyGenreRepository.create(
+    app.state.genre_repository = SQLAlchemyGenreRepository(
         await get_session_generator("music")
     )
 

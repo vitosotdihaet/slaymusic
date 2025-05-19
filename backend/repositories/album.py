@@ -3,7 +3,7 @@ from repositories.interfaces import IAlbumRepository
 from repositories.helpers import RepositoryHelpers
 from models.music import AlbumModel, ArtistModel
 from models.base_model import MusicModelBase
-from configs.database import ensure_tables, ensure_extensions
+from configs.database import ensure_extensions
 from exceptions.music import AlbumNotFoundException, ArtistNotFoundException
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -13,14 +13,6 @@ from sqlalchemy import select, delete, func
 class SQLAlchemyAlbumRepository(IAlbumRepository, RepositoryHelpers):
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
         self.session_factory = session_factory
-
-    @staticmethod
-    async def create(
-        session_factory: async_sessionmaker[AsyncSession],
-    ) -> "SQLAlchemyAlbumRepository":
-        await ensure_extensions("music")
-        await ensure_tables(MusicModelBase, "music")
-        return SQLAlchemyAlbumRepository(session_factory)
 
     async def create_album(self, new_album: NewAlbum) -> Album:
         async with self.session_factory() as session:

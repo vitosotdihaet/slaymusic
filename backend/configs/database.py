@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy import text
 
-
 from configs.environment import settings
 
 DBS = ["accounts", "user-activity", "music"]
@@ -40,7 +39,6 @@ async def get_session_generator(db_name: str) -> async_sessionmaker[AsyncSession
 async def ensure_tables(Base, db_name: str) -> None:
     async with engines[db_name].begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
 
 async def ensure_extensions(db_name: str) -> None:
     async with session_makers[db_name]() as session:
