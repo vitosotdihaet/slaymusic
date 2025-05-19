@@ -7,7 +7,7 @@ from repositories.album import SQLAlchemyAlbumRepository
 from repositories.artist import SQLAlchemyArtistRepository
 from repositories.genre import SQLAlchemyGenreRepository
 from services.accounts import AccountService
-from repositories.user_activity import SQLAlchemyUserActivityRepository
+from repositories.user_activity import MongoDBUserActivityRepository
 from repositories.accounts import SQLAlchemyUserRepository
 from configs.database import get_session_generator
 from contextlib import asynccontextmanager
@@ -18,9 +18,7 @@ from dto.accounts import UserMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.user_activity_repository = await SQLAlchemyUserActivityRepository.create(
-        await get_session_generator("user-activity")
-    )
+    app.state.user_activity_repository = await MongoDBUserActivityRepository.create()
     app.state.user_activity_service = UserActivityService(
         app.state.user_activity_repository
     )

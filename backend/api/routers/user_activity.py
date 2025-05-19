@@ -7,14 +7,10 @@ from fastapi import (
 )
 
 from exceptions.user_activity import (
-    EventNotFoundException,
     UserActivityNotFoundException,
 )
 from dto.user_activity import (
-    ActiveUsers,
-    TracksCompletionRate,
     UserActivity,
-    MostPlayedTracks,
     UserActivityFilter,
     UserActivityPost,
 )
@@ -78,11 +74,6 @@ async def add_user_activity(
 ) -> UserActivity:
     try:
         return await user_activity_service.add(user_activity)
-    except EventNotFoundException as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User activity event was not found: {e}",
-        )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}")
 
@@ -98,66 +89,6 @@ async def delete_user_activity(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User activity with filter {e} was not found",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}"
-        )
-
-
-@activity_metrics_router.get(
-    "/most-played-tracks",
-    response_model=MostPlayedTracks,
-    status_code=status.HTTP_200_OK,
-)
-async def get_most_played_tracks(
-    offset: Optional[int] = None,
-    limit: Optional[int] = None,
-    user_activity_service: UserActivityService = Depends(get_user_activity_service),
-) -> MostPlayedTracks:
-    try:
-        return await user_activity_service.get_most_played_tracks(
-            offset=offset, limit=limit
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}"
-        )
-
-
-@activity_metrics_router.get(
-    "/daily-active-users",
-    response_model=ActiveUsers,
-    status_code=status.HTTP_200_OK,
-)
-async def get_daily_active_users_count(
-    offset: Optional[int] = None,
-    limit: Optional[int] = None,
-    user_activity_service: UserActivityService = Depends(get_user_activity_service),
-) -> ActiveUsers:
-    try:
-        return await user_activity_service.get_daily_active_users_count(
-            offset=offset, limit=limit
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}"
-        )
-
-
-@activity_metrics_router.get(
-    "/tracks-completion-rate",
-    response_model=TracksCompletionRate,
-    status_code=status.HTTP_200_OK,
-)
-async def get_tracks_completion_rate(
-    offset: Optional[int] = None,
-    limit: Optional[int] = None,
-    user_activity_service: UserActivityService = Depends(get_user_activity_service),
-) -> TracksCompletionRate:
-    try:
-        return await user_activity_service.get_tracks_completion_rate(
-            offset=offset, limit=limit
         )
     except Exception as e:
         raise HTTPException(

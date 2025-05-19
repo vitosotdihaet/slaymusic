@@ -30,11 +30,11 @@ spec:
           image: postgres:15
           env:
             - name: POSTGRES_USER
-              value: $POSTGRESQL_MUSIC_ROOT_USER
+              value: $MUSIC_ROOT_USER
             - name: POSTGRES_PASSWORD
-              value: $POSTGRESQL_MUSIC_ROOT_PASSWORD
+              value: $MUSIC_ROOT_PASSWORD
             - name: POSTGRES_DB
-              value: $POSTGRESQL_MUSIC_DB
+              value: $MUSIC_DB
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -45,9 +45,9 @@ spec:
               command:
                 - pg_isready
                 - -U
-                - $POSTGRESQL_MUSIC_ROOT_USER
+                - $MUSIC_ROOT_USER
                 - -d
-                - $POSTGRESQL_MUSIC_DB
+                - $MUSIC_DB
                 - -q
             periodSeconds: 10
             timeoutSeconds: 1
@@ -56,9 +56,9 @@ spec:
               command:
                 - psql
                 - -U
-                - $POSTGRESQL_MUSIC_ROOT_USER
+                - $MUSIC_ROOT_USER
                 - -d
-                - $POSTGRESQL_MUSIC_DB
+                - $MUSIC_DB
                 - -c
                 - "SELECT 1"
             periodSeconds: 10
@@ -68,9 +68,9 @@ spec:
               command:
                 - psql
                 - -U
-                - $POSTGRESQL_MUSIC_ROOT_USER
+                - $MUSIC_ROOT_USER
                 - -d
-                - $POSTGRESQL_MUSIC_DB
+                - $MUSIC_DB
                 - -c
                 - "SELECT 1"
             failureThreshold: 50
@@ -90,6 +90,6 @@ spec:
   ports:
     - protocol: TCP
       name: db
-      port: $POSTGRESQL_MUSIC_PORT
+      port: $MUSIC_PORT
       targetPort: 5432
   type: NodePort

@@ -4,7 +4,3 @@ class UserActivityException(Exception):
 
 class UserActivityNotFoundException(UserActivityException):
     pass
-
-
-class EventNotFoundException(UserActivityException):
-    pass

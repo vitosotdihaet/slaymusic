@@ -30,9 +30,9 @@ spec:
                 echo " Done"
               }
 
-              check_service "postgres-accounts-service" "postgres-accounts-service" "$POSTGRESQL_ACCOUNTS_PORT"
-              check_service "postgres-music-service" "postgres-music-service" "$POSTGRESQL_MUSIC_PORT"
-              check_service "postgres-user-activity-service" "postgres-user-activity-service" "$POSTGRESQL_USER_ACTIVITY_PORT"
+              check_service "postgres-accounts-service" "postgres-accounts-service" "$ACCOUNTS_PORT"
+              check_service "postgres-music-service" "postgres-music-service" "$MUSIC_PORT"
+              check_service "mongodb-user-activity-service" "mongodb-user-activity-service" "$USER_ACTIVITY_PORT"
               check_service "minio-service" "minio-service" "$MINIO_PORT"
 
               echo "All dependencies are up!"

@@ -2,10 +2,7 @@ from typing import Optional
 
 from repositories.interfaces import IUserActivityRepository
 from dto.user_activity import (
-    ActiveUsers,
-    TracksCompletionRate,
     UserActivity,
-    MostPlayedTracks,
     UserActivityFilter,
     UserActivityPost,
 )
@@ -40,24 +37,3 @@ class UserActivityService:
 
     async def delete(self, filter: UserActivityFilter) -> None:
         return await self.user_activity_repository.delete(filter)
-
-    async def get_most_played_tracks(
-        self, offset: Optional[int] = None, limit: Optional[int] = None
-    ) -> MostPlayedTracks:
-        return await self.user_activity_repository.get_most_played_tracks(
-            offset=offset, limit=limit
-        )
-
-    async def get_daily_active_users_count(
-        self, offset: Optional[int] = None, limit: Optional[int] = None
-    ) -> ActiveUsers:
-        return await self.user_activity_repository.get_daily_active_users_count(
-            offset=offset, limit=limit
-        )
-
-    async def get_tracks_completion_rate(
-        self, offset: Optional[int] = None, limit: Optional[int] = None
-    ) -> TracksCompletionRate:
-        return await self.user_activity_repository.get_tracks_completion_rate(
-            offset=offset, limit=limit
-        )
