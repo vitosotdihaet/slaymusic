@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     USER_ACTIVITY_PORT: int
 
     BACKEND_PORT: int
+    BACKEND_REPLICAS: int
 
     AUTH_SECRET_KEY: str
     AUTH_ALGORITHM: str

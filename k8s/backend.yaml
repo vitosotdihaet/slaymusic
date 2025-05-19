@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: it-project-music-streaming-service-backend
 spec:
-  replicas: 1
+  replicas: $BACKEND_REPLICAS
   selector:
     matchLabels:
       app: it-project-music-streaming-service-backend
