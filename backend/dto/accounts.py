@@ -28,10 +28,11 @@ class LoginUser(BaseModel):
     password: str
 
 
-class LoginUserWithID(BaseModel):
+class FullUser(BaseModel):
     id: int
     username: str
     password: str
+    role: UserRole
 
 
 class NewRoleUser(NewUser):
