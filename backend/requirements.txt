@@ -6,9 +6,6 @@ pydantic-settings
 python-multipart
 sqlalchemy
 asyncpg
-<<<<<<< HEAD
 python-jose
 passlib
-=======
 alembic
->>>>>>> 87a96d3 (feat: alembic for music tables and extension creation)

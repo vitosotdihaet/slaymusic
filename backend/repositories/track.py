@@ -3,7 +3,6 @@ from repositories.interfaces import ITrackRepository
 from repositories.helpers import RepositoryHelpers
 from models.music import TrackModel, AlbumModel, ArtistModel, GenreModel
 from models.base_model import MusicModelBase
-from configs.database import ensure_tables, ensure_extensions
 from exceptions.music import (
     AlbumNotFoundException,
     ArtistNotFoundException,

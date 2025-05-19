@@ -3,7 +3,6 @@ from repositories.interfaces import IArtistRepository
 from repositories.helpers import RepositoryHelpers
 from models.music import ArtistModel
 from models.base_model import MusicModelBase
-from configs.database import ensure_tables, ensure_extensions
 from exceptions.music import ArtistNotFoundException
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker

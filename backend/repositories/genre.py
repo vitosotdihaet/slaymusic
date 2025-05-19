@@ -3,7 +3,6 @@ from repositories.interfaces import IGenreRepository
 from repositories.helpers import RepositoryHelpers
 from models.music import GenreModel
 from models.base_model import MusicModelBase
-from configs.database import ensure_tables, ensure_extensions
 from exceptions.music import GenreNotFoundException, GenreNameAlreadyExistsException
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
