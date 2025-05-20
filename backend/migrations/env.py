@@ -6,7 +6,8 @@ from sqlalchemy import pool
 from alembic import context
 from configs.database import get_psql_url
 from models.base_model import MusicModelBase
-from models.music import ArtistModel
+from models.music import AlbumModel, ArtistModel, GenreModel, TrackModel
+
 config = context.config
 
 if config.config_file_name is not None:
@@ -15,6 +16,7 @@ url = get_psql_url("music") + "?async_fallback=True"
 config.set_main_option("sqlalchemy.url", url)
 
 target_metadata = MusicModelBase.metadata
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -55,7 +57,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata, compare_server_default=True
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_server_default=True,
         )
 
         with context.begin_transaction():
