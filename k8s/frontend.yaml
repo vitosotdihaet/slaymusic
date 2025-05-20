@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: music-frontend
+  labels:
+    app: music-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: music-frontend
+  template:
+    metadata:
+      labels:
+        app: music-frontend
+    spec:
+      containers:
+        - name: music-frontend
+          image: music-frontend-image
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: music-frontend
+spec:
+  selector:
+    app: music-frontend
+  ports:
+    - protocol: TCP
+      port: $FRONTEND_PORT
+      targetPort: 80
+  type: NodePort
