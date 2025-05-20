@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     AUTH_ACCESS_TOKEN_EXPIRED_MINUTES: int
 
     FRONTEND_PORT: int
+    VUE_APP_BACKEND_URL: str
 
     class Config:
         env_file = ".env"
