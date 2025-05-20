@@ -8,3 +8,5 @@ sqlalchemy
 asyncpg
 python-jose
 passlib
+beanie
+motor

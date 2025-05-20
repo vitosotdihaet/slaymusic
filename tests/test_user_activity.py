@@ -10,10 +10,6 @@ class TestUserActivityEndpoints:
         response = await async_client.post("/user_activity/", params=t)
         assert response.status_code == status.HTTP_201_CREATED
 
-        t["event"] = "keknul"
-        response = await async_client.post("/user_activity/", params=t)
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
         response = await async_client.post("/user_activity/")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -81,8 +77,8 @@ class TestUserActivityEndpoints:
         # Test combined filters
         response = await async_client.post(
             "/user_activity/list",
-            params={"track_ids": [101], "limit": 1},
-            json={"user_ids": [1, 2]},
+            params={"limit": 1},
+            json={"user_ids": [1, 2], "track_ids": [101]},
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()

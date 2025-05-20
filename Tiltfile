@@ -15,7 +15,7 @@ yaml_files = [
     'k8s/minio.yaml',
     'k8s/psql-accounts.yaml',
     'k8s/psql-music.yaml',
-    'k8s/psql-user-activity.yaml'
+    'k8s/mongo-user-activity.yaml'
 ]
 
 for file in yaml_files:
@@ -34,7 +34,7 @@ k8s_resource(
         'minio',
         'postgres-accounts',
         'postgres-music',
-        'postgres-user-activity'
+        'mongodb-user-activity'
     ]
 )
 
