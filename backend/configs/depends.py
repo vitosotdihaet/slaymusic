@@ -13,8 +13,10 @@ from repositories.user import SQLAlchemyUserRepository
 from repositories.user_activity import MongoDBUserActivityRepository
 from repositories.playlist import SQLAlchemyPlaylistRepository
 from repositories.track_queue import RedisTrackQueueRepository
+from exceptions.accounts import AccountsBaseException
+from exceptions.music import MusicBaseException
 
-from typing import Type, Callable
+from typing import Type, Callable, Any
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, Depends, status
@@ -91,8 +93,6 @@ def get_track_queue_service(request: Request) -> TrackQueueService:
 security = HTTPBearer()
 
 
-# можно юзать как мидлварю для аутентификации пользователей
-# позже можно сделать отдельно для admin/analyst/user
 def check_access(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     account_service: AccountService = Depends(get_account_service),
@@ -100,66 +100,94 @@ def check_access(
     token = credentials.credentials
     payload = account_service.verify_token(token)
     if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return payload
-
-
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    account_service: AccountService = Depends(get_account_service),
-) -> UserMiddleware:
-    token = credentials.credentials
-    user = account_service.verify_token(token)
-    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
-    return user
+    return payload
 
 
-def require_owner_or_admin(model: Type[BaseModel], field_name: str) -> Callable:
+def check_admin_access(
+    user_data: UserMiddleware = Depends(check_access),
+) -> UserMiddleware:
+    if user_data.role != UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+    return user_data
+
+
+def get_owner_or_user(model: Type[BaseModel], field_name: str) -> Callable:
     def dependency(
         body: model = Depends(model),  # type: ignore
-        current_user: UserMiddleware = Depends(get_current_user),
+        current_user: UserMiddleware = Depends(check_access),
     ) -> BaseModel:
-        target_id = getattr(body, field_name)
+        target_id = getattr(body, field_name, None)
+        if target_id is None:
+            target_id = current_user.id
+        setattr(body, field_name, target_id)
+
+        return body
+
+    return dependency
+
+
+def get_owner_or_admin(model: Type[BaseModel], field_name: str) -> Callable:
+    def dependency(
+        body: model = Depends(model),  # type: ignore
+        current_user: UserMiddleware = Depends(check_access),
+    ) -> BaseModel:
+        target_id = getattr(body, field_name, None)
+        if target_id is None:
+            target_id = current_user.id
+        setattr(body, field_name, target_id)
+
         if current_user.role != UserRole.admin and target_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Not allowed to modify resource owned by user {target_id}",
             )
-        return current_user
+        return body
 
     return dependency
 
 
-# Example of require_owner_or_admin usage
-# @router.post(
-#     "/subscribe",
-#     status_code=status.HTTP_201_CREATED,
-# )
-# async def subscribe_to(
-#     subscribe: Subscribe = Depends(),
-#     user_data: UserMiddleware = Depends(
-#         require_owner_or_admin(Subscribe, "subscriber_id")
-#     ),
-#     account_service: AccountService = Depends(get_account_service),
-# ):
-#     if subscribe.subscriber_id == subscribe.artist_id:
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN, detail="Cannot subscribe to self"
-#         )
-#     try:
-#         await account_service.subscribe_to(subscribe)
-#     except UserNotFoundException as e:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-#     except SubscriptionAlreadyExist as e:
-#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+class ID(BaseModel):
+    id: int
 
 
-def check_admin_access(
-    user_data=Depends(check_access),
-) -> UserMiddleware:
-    if not user_data.role == UserRole.admin:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    return user_data
+def require_owner_or_admin(
+    model: Type[BaseModel],
+    id_field_name: str,
+    get_method_name_in_service: str,
+    service_dependency: Callable[..., Any],
+) -> Callable:
+    async def dep(
+        body: model = Depends(model),  # type: ignore
+        current_user: UserMiddleware = Depends(check_access),
+        service: MusicService = Depends(service_dependency),
+    ) -> UserMiddleware:
+        body_id = getattr(body, id_field_name, None)
+
+        get_object_method = getattr(service, get_method_name_in_service, None)
+
+        try:
+            target_object = await get_object_method(ID(id=body_id))
+        except (
+            AccountsBaseException,
+            MusicBaseException,
+        ) as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
+
+        owner_id = getattr(target_object, "artist_id", None)
+        if owner_id is None:
+            owner_id = getattr(target_object, "author_id")
+
+        if current_user.role != UserRole.admin and owner_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Not allowed to modify resource owned by user {owner_id}",
+            )
+        return current_user
+
+    return dep

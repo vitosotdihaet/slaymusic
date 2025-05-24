@@ -5,8 +5,9 @@ from fastapi import (
     Depends,
 )
 from dto.music import GenreID, Genre, NewGenre, GenreSearchParams, UpdateGenre
+from dto.accounts import UserMiddleware
 from services.music import MusicService
-from configs.depends import get_music_service
+from configs.depends import get_music_service, check_admin_access
 from exceptions.music import GenreNameAlreadyExistsException, GenreNotFoundException
 
 router = APIRouter(prefix="/genre", tags=["genre"])
@@ -20,6 +21,7 @@ router = APIRouter(prefix="/genre", tags=["genre"])
 async def create_genre(
     new_genre: NewGenre = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(check_admin_access),
 ):
     try:
         return await music_service.create_genre(new_genre)
@@ -53,6 +55,7 @@ async def get_genres(
 async def update_metadata(
     genre: UpdateGenre = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(check_admin_access),
 ):
     try:
         return await music_service.update_genre(genre)
@@ -66,6 +69,7 @@ async def update_metadata(
 async def delete_genre(
     genre_id: GenreID = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(check_admin_access),
 ):
     try:
         await music_service.delete_genre(genre_id)

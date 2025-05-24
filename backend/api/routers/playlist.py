@@ -15,9 +15,14 @@ from dto.accounts import (
     PlaylistSearchParams,
     PlaylistTrack,
     UpdatePlaylist,
+    UserMiddleware,
 )
 from services.accounts import AccountService
-from configs.depends import get_account_service
+from configs.depends import (
+    get_account_service,
+    require_owner_or_admin,
+    get_owner_or_admin,
+)
 from exceptions.accounts import (
     UserNotFoundException,
     PlaylistNotFoundException,
@@ -35,9 +40,12 @@ router = APIRouter(prefix="/playlist", tags=["playlist"])
     status_code=status.HTTP_201_CREATED,
 )
 async def create_playlist(
-    new_playlist: NewPlaylist = Depends(),
+    _: NewPlaylist = Depends(),
     image_file: UploadFile | str | None = None,
     accounts_service: AccountService = Depends(get_account_service),
+    new_playlist: UserMiddleware = Depends(
+        get_owner_or_admin(NewPlaylist, "author_id")
+    ),
 ):
     image_bytes = None
     image_content_type = None
@@ -97,6 +105,11 @@ async def get_image(
 async def update_metadata(
     playlist: UpdatePlaylist = Depends(),
     accounts_service: AccountService = Depends(get_account_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(
+            UpdatePlaylist, "id", "get_playlist", get_account_service
+        )
+    ),
 ):
     try:
         return await accounts_service.update_playlist(playlist)
@@ -109,6 +122,9 @@ async def update_playlist_image(
     playlist_id: PlaylistID = Depends(),
     image_file: UploadFile = File(),
     accounts_service: AccountService = Depends(get_account_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(PlaylistID, "id", "get_playlist", get_account_service)
+    ),
 ):
     image_bytes = await image_file.read()
     image_content_type = image_file.content_type
@@ -125,6 +141,9 @@ async def update_playlist_image(
 async def delete_playlist(
     playlist_id: PlaylistID = Depends(),
     accounts_service: AccountService = Depends(get_account_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(PlaylistID, "id", "get_playlist", get_account_service)
+    ),
 ):
     try:
         await accounts_service.delete_playlist(playlist_id)
@@ -136,6 +155,9 @@ async def delete_playlist(
 async def delete_image(
     playlist_id: PlaylistID = Depends(),
     accounts_service: AccountService = Depends(get_account_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(PlaylistID, "id", "get_playlist", get_account_service)
+    ),
 ):
     try:
         await accounts_service.delete_playlist_image(playlist_id)
@@ -154,6 +176,11 @@ async def delete_image(
 async def add_track_to_playlist(
     playlist_track: PlaylistTrack = Depends(),
     accounts_service: AccountService = Depends(get_account_service),
+    user_data: UserMiddleware = Depends(
+        require_owner_or_admin(
+            PlaylistTrack, "playlist_id", "get_playlist", get_account_service
+        )
+    ),
 ):
     try:
         return await accounts_service.add_track_to_playlist(playlist_track)
@@ -173,6 +200,11 @@ async def add_track_to_playlist(
 async def remove_track_from_playlist(
     playlist_track: PlaylistTrack = Depends(),
     accounts_service: AccountService = Depends(get_account_service),
+    user_data: UserMiddleware = Depends(
+        require_owner_or_admin(
+            PlaylistTrack, "playlist_id", "get_playlist", get_account_service
+        )
+    ),
 ):
     try:
         await accounts_service.remove_track_from_playlist(playlist_track)

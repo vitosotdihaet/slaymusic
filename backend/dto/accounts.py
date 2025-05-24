@@ -10,7 +10,7 @@ class UserRole(str, Enum):
 
 
 class UserID(BaseModel):
-    id: int
+    id: int | None = None
 
 
 class UserUsername(BaseModel):
@@ -79,7 +79,7 @@ class PlaylistID(BaseModel):
 
 
 class NewPlaylist(BaseModel):
-    author_id: int
+    author_id: int | None = None
     name: str
 
 
@@ -125,7 +125,7 @@ class UserSearchParams(AccountsSearchParams):
 
 
 class PlaylistSearchParams(AccountsSearchParams):
-    author_id: int
+    author_id: int | None = None
 
 
 class SubscribeSearchParams(BaseModel):

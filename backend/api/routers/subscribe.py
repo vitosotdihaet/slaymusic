@@ -2,8 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from configs.depends import (
     get_account_service,
-    check_access,
-    require_owner_or_admin,
+    get_owner_or_admin,
 )
 from dto.accounts import (
     UserID,
@@ -29,10 +28,8 @@ router = APIRouter(prefix="/user", tags=["user"])
 )
 async def subscribe_to(
     subscribe: Subscribe = Depends(),
-    # user_data: UserMiddleware = Depends(
-    #     require_owner_or_admin(Subscribe, "subscriber_id")
-    # ),
     account_service: AccountService = Depends(get_account_service),
+    _: UserMiddleware = Depends(get_owner_or_admin(Subscribe, "subscriber_id")),
 ):
     if subscribe.subscriber_id == subscribe.artist_id:
         raise HTTPException(
@@ -50,7 +47,7 @@ async def subscribe_to(
 async def unsubscribe_from(
     subscribe: Subscribe = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    # user_data: UserMiddleware = Depends(check_access),
+    _: UserMiddleware = Depends(get_owner_or_admin(Subscribe, "subscriber_id")),
 ):
     try:
         await account_service.unsubscribe_from(subscribe)
@@ -62,7 +59,7 @@ async def unsubscribe_from(
 async def get_subscriptions(
     params: SubscribeSearchParams = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    # user_data: UserMiddleware = Depends(check_access),
+    _: UserMiddleware = Depends(get_owner_or_admin(SubscribeSearchParams, "id")),
 ):
     try:
         return await account_service.get_subscriptions(params)
@@ -74,7 +71,7 @@ async def get_subscriptions(
 async def get_subscribers(
     params: SubscribeSearchParams = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    # user_data: UserMiddleware = Depends(check_access),
+    _: UserMiddleware = Depends(get_owner_or_admin(SubscribeSearchParams, "id")),
 ):
     try:
         return await account_service.get_subscribers(params)
@@ -86,7 +83,6 @@ async def get_subscribers(
 async def get_subscriber_count(
     user: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    # user_data: UserMiddleware = Depends(check_access),
 ):
     try:
         return await account_service.get_subscribe_count(user)

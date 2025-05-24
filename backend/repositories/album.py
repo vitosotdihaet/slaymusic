@@ -80,12 +80,15 @@ class SQLAlchemyAlbumRepository(IAlbumRepository, RepositoryHelpers):
 
     async def update_album(self, new_album: UpdateAlbum) -> Album:
         async with self.session_factory() as session:
-            model = await self._get_one_or_none(
-                select(UserModel).where(UserModel.id == new_album.artist_id),
-                session,
-            )
-            if not model:
-                raise UserNotFoundException(f"Artist '{new_album.artist_id}' not found")
+            if new_album.artist_id:
+                model = await self._get_one_or_none(
+                    select(UserModel).where(UserModel.id == new_album.artist_id),
+                    session,
+                )
+                if not model:
+                    raise UserNotFoundException(
+                        f"Artist '{new_album.artist_id}' not found"
+                    )
             model = await self._get_one_or_none(
                 select(AlbumModel).where(AlbumModel.id == new_album.id), session
             )

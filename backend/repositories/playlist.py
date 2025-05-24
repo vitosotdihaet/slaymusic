@@ -52,14 +52,15 @@ class SQLAlchemyPlaylistRepository(IPlaylistRepository, RepositoryHelpers):
 
     async def get_playlists(self, params: PlaylistSearchParams) -> list[Playlist]:
         async with self.session_factory() as session:
-            model = await self._get_one_or_none(
-                select(UserModel).where(UserModel.id == params.author_id), session
-            )
-            if not model:
-                raise UserNotFoundException(f"User '{params.author_id}' not found")
-            query = select(PlaylistModel).where(
-                PlaylistModel.author_id == params.author_id
-            )
+            query = select(PlaylistModel)
+
+            if params.author_id:
+                model = await self._get_one_or_none(
+                    select(UserModel).where(UserModel.id == params.author_id), session
+                )
+                if not model:
+                    raise UserNotFoundException(f"User '{params.author_id}' not found")
+                query = query.where(PlaylistModel.author_id == params.author_id)
 
             if params.name:
                 query = query.filter(

@@ -34,23 +34,27 @@ class NewGenre(BaseModel):
     name: str
 
 
-class UpdateGenre(NewGenre):
+class UpdateGenre(BaseModel):
     id: int
+    name: str
 
 
 class NewAlbum(BaseModel):
     name: str
-    artist_id: int
+    artist_id: int | None = None
     release_date: date
 
 
-class UpdateAlbum(NewAlbum):
+class UpdateAlbum(BaseModel):
     id: int
+    name: str | None = None
+    artist_id: int | None = None
+    release_date: date | None = None
 
 
 class NewSingle(BaseModel):
     name: str
-    artist_id: int
+    artist_id: int | None = None
     genre_id: int | None = None
     release_date: date
 
@@ -58,13 +62,18 @@ class NewSingle(BaseModel):
 class NewTrack(BaseModel):
     name: str
     album_id: int
-    artist_id: int
+    artist_id: int | None = None
     genre_id: int | None = None
     release_date: date
 
 
-class UpdateTrack(NewTrack):
+class UpdateTrack(BaseModel):
     id: int
+    name: str | None = None
+    album_id: int | None = None
+    artist_id: int | None = None
+    genre_id: int | None = None
+    release_date: date | None = None
 
 
 class Genre(NewGenre):

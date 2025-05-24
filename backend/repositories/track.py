@@ -116,18 +116,24 @@ class SQLAlchemyTrackRepository(ITrackRepository, RepositoryHelpers):
 
     async def update_track(self, new_track: UpdateTrack) -> Track:
         async with self.session_factory() as session:
-            model = await self._get_one_or_none(
-                select(UserModel).where(UserModel.id == new_track.artist_id),
-                session,
-            )
-            if not model:
-                raise UserNotFoundException(f"Artist '{new_track.artist_id}' not found")
-            model = await self._get_one_or_none(
-                select(AlbumModel).where(AlbumModel.id == new_track.album_id),
-                session,
-            )
-            if not model:
-                raise AlbumNotFoundException(f"Album '{new_track.album_id}' not found")
+            if new_track.artist_id:
+                model = await self._get_one_or_none(
+                    select(UserModel).where(UserModel.id == new_track.artist_id),
+                    session,
+                )
+                if not model:
+                    raise UserNotFoundException(
+                        f"Artist '{new_track.artist_id}' not found"
+                    )
+            if new_track.album_id:
+                model = await self._get_one_or_none(
+                    select(AlbumModel).where(AlbumModel.id == new_track.album_id),
+                    session,
+                )
+                if not model:
+                    raise AlbumNotFoundException(
+                        f"Album '{new_track.album_id}' not found"
+                    )
             if new_track.genre_id:
                 model = await self._get_one_or_none(
                     select(GenreModel).where(GenreModel.id == new_track.genre_id),

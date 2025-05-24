@@ -30,7 +30,7 @@ class MinioMusicFileRepository(IMusicFileRepository):
         client = Minio(
             endpoint, access_key=access_key, secret_key=secret_key, secure=False
         )
-        if not await client.bucket_exists(track_bucket):
+        if not await client.bucket_exists(track_bucket):  # TODO sometimes err
             await client.make_bucket(track_bucket)
         if not await client.bucket_exists(image_bucket):
             await client.make_bucket(image_bucket)

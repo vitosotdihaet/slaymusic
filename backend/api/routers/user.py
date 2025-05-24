@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi.responses import Response
 
 from services.accounts import AccountService
-from configs.depends import get_account_service, check_access
+from configs.depends import get_account_service, get_owner_or_admin, get_owner_or_user
 from exceptions.accounts import (
     AccountsBaseException,
     UserAlreadyExist,
@@ -79,9 +79,9 @@ async def register(
 
 @router.get("/", response_model=User, status_code=status.HTTP_200_OK)
 async def get_user(
-    user: UserID = Depends(),
+    _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    # user_data=Depends(check_access),
+    user: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
 ):
     try:
         return await account_service.get_user(user)
@@ -91,8 +91,9 @@ async def get_user(
 
 @router.get("/artist/", response_model=Artist)
 async def get_artist(
-    user_id: UserID = Depends(),
+    _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
+    user_id: UserMiddleware = Depends(get_owner_or_user(UserID, "id")),
 ):
     try:
         return await account_service.get_user_artist(user_id)
@@ -115,8 +116,9 @@ async def get_artists(
     "/image/", responses={200: {"content": {"image/png": {}}}}, response_class=Response
 )
 async def get_image(
-    user_id: UserID = Depends(),
+    _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
+    user_id: UserMiddleware = Depends(get_owner_or_user(UserID, "id")),
 ):
     try:
         image_bytes = await account_service.get_user_image(user_id)
@@ -153,7 +155,7 @@ async def login(
 async def update_metadata(
     user: UpdateUser = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    # user_data=Depends(check_access),
+    _: UserMiddleware = Depends(get_owner_or_admin(UpdateUser, "id")),
 ):
     try:
         return await account_service.update_user(user)
@@ -166,7 +168,7 @@ async def update_image(
     user: UserID = Depends(),
     cover_file: UploadFile = File(),
     account_service: AccountService = Depends(get_account_service),
-    # user_data=Depends(check_access),
+    _: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
 ):
     cover_bytes = await cover_file.read()
     cover_content_type = cover_file.content_type
@@ -183,7 +185,7 @@ async def update_image(
 async def delete_user(
     user: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    # user_data=Depends(check_access),
+    _: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
 ):
     try:
         await account_service.delete_user(user)
@@ -195,7 +197,7 @@ async def delete_user(
 async def delete_user_image(
     user: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    # user_data=Depends(check_access),
+    _: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
 ):
     try:
         await account_service.delete_user_image(user)
