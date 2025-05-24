@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     USER_ACTIVITY_DB: str
     USER_ACTIVITY_PORT: int
 
+    TRACK_QUEUE_ROOT_USER: str
+    TRACK_QUEUE_ROOT_PASSWORD: str
+    TRACK_QUEUE_DB: str
+    TRACK_QUEUE_PORT: int
+    TRACK_QUEUE_TTL: int
+
     BACKEND_PORT: int
     BACKEND_REPLICAS: int
 

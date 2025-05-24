@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-track-queue-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment # TODO: change to stateful set later, or even use a redis cluster
+metadata:
+  name: redis-track-queue
+spec:
+  selector:
+    matchLabels:
+      app: redis-track-queue
+  template:
+    metadata:
+      labels:
+        app: redis-track-queue
+    spec:
+      containers:
+        - name: redis-track-queue
+          image: redis:7.2
+          command: ["redis-server", "/config/redis.conf"]
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              memory: 64M
+              cpu: 250m
+            limits:
+              memory: 1G
+              cpu: 500m
+          volumeMounts:
+            - name: storage
+              mountPath: /data
+            - name: config
+              mountPath: /config
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - -u
+                - redis://check@localhost:6379
+                - PING
+            periodSeconds: 10
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - -u
+                - redis://check@localhost:6379
+                - PING
+            periodSeconds: 10
+            timeoutSeconds: 1
+          startupProbe:
+            exec:
+              command:
+                - redis-cli
+                - -u
+                - redis://check@localhost:6379
+                - PING
+            failureThreshold: 10
+            periodSeconds: 3
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: redis-track-queue-pvc
+        - name: config
+          configMap:
+            name: redis-track-queue-config
+            items:
+            - key: config
+              path: redis.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-track-queue-service
+spec:
+  selector:
+    app: redis-track-queue
+  ports:
+    - protocol: TCP
+      name: db
+      port: $TRACK_QUEUE_PORT
+      targetPort: 6379
+  type: NodePort

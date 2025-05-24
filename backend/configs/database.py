@@ -1,3 +1,6 @@
+from typing import Callable
+import redis.asyncio
+import redis.asyncio.client
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -36,6 +39,12 @@ def get_mongo_url(db_name: str) -> str:
     return f"mongodb://{creds['user']}:{creds['password']}@{host}:{creds['port']}?authSource=admin"
 
 
+def get_redis_url(db_name: str) -> str:
+    creds = get_db_creds(db_name)
+    host = f"redis-{db_name}-service"
+    return f"redis://{creds['user']}:{creds['password']}@{host}:{creds['port']}/{creds['db']}?decode_responses=True&health_check_interval=2&protocol=3"
+
+
 engines: dict[str, AsyncEngine] = {
     name: create_async_engine(get_psql_url(name), future=True) for name in DBS
 }
@@ -68,3 +77,17 @@ async def init_mongo_db(models: list[type[Document]], db_name: str):
         database=getattr(client, getattr(settings, f"{DB_NAME}_DB")),
         document_models=models,
     )
+
+
+def get_redis_client_generator(
+    db_name: str,
+) -> Callable[[], redis.asyncio.client.Redis]:
+    return lambda: redis.asyncio.Redis.from_url(get_redis_url(db_name))
+
+
+async def ensure_scripts(db_name: str, scripts: dict[str, str]) -> dict[str, str]:
+    sha1s = {}
+    async with get_redis_client_generator(db_name)() as client:
+        for k, v in scripts.items():
+            sha1s[k] = await client.script_load(v)
+    return sha1s

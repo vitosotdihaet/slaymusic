@@ -1,4 +1,5 @@
 from datetime import date
+from fastapi import Query
 from pydantic import BaseModel, Field
 from typing import AsyncIterator
 from dataclasses import dataclass
@@ -30,7 +31,7 @@ class AlbumID(BaseModel):
 
 
 class TrackID(BaseModel):
-    id: int
+    id: int = Query(ge=0)
 
 
 class NewGenre(BaseModel):
