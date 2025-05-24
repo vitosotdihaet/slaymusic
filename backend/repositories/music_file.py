@@ -1,8 +1,8 @@
 from .interfaces import IMusicFileRepository
-from dto.music import MusicFileStats, Artist, Track, Album, AlbumID, ArtistID
+from dto.music import MusicFileStats, Track, Album, AlbumID
+from dto.accounts import User, UserID, Playlist, PlaylistID
 from exceptions.music import MusicFileNotFoundException, ImageFileNotFoundException
 
-from aiohttp import ClientSession
 from typing import AsyncIterator
 from miniopy_async import Minio, S3Error
 from io import BytesIO
@@ -41,12 +41,16 @@ class MinioMusicFileRepository(IMusicFileRepository):
         return f"{track.artist_id}/{track.id}"
 
     @staticmethod
-    def _get_artist_path(artist: Artist | ArtistID):
-        return f"artists/{artist.id}"
+    def _get_artist_path(artist: User | UserID):
+        return f"user/{artist.id}"
 
     @staticmethod
     def _get_album_path(album: Album | AlbumID):
         return f"albums/{album.id}"
+
+    @staticmethod
+    def _get_playlist_path(playlist: Playlist | PlaylistID):
+        return f"playlist/{playlist.id}"
 
     async def save_track(
         self,
@@ -65,14 +69,16 @@ class MinioMusicFileRepository(IMusicFileRepository):
 
     async def save_image(
         self,
-        image: Album | AlbumID | Artist | ArtistID,
+        image: Album | AlbumID | User | UserID | Playlist | PlaylistID,
         file_data: bytes,
         content_type: str,
     ) -> None:
         if isinstance(image, (Album, AlbumID)):
             name = self._get_album_path(image)
-        else:
+        elif isinstance(image, (User, UserID)):
             name = self._get_artist_path(image)
+        else:
+            name = self._get_playlist_path(image)
         data_obj = BytesIO(file_data)
         await self.minio_client.put_object(
             bucket_name=self.image_bucket,
@@ -89,43 +95,43 @@ class MinioMusicFileRepository(IMusicFileRepository):
         end: int,
     ) -> AsyncIterator[bytes]:
         content_length = end - start + 1
-        async with ClientSession() as session:
-            response = await self.minio_client.get_object(
-                bucket_name=self.track_bucket,
-                object_name=self._get_track_path(track),
-                session=session,
-                offset=start,
-                length=content_length,
-            )
-            try:
-                async for chunk in response.content.iter_chunked(8192):
-                    yield chunk
-            finally:
-                await response.release()
+        response = await self.minio_client.get_object(
+            bucket_name=self.track_bucket,
+            object_name=self._get_track_path(track),
+            offset=start,
+            length=content_length,
+        )
+        try:
+            async for chunk in response.content.iter_chunked(8192):
+                yield chunk
+        finally:
+            await response.release()
 
-    async def get_image(self, image: Album | AlbumID | Artist | ArtistID) -> bytes:
+    async def get_image(
+        self, image: Album | AlbumID | User | UserID | Playlist | PlaylistID
+    ) -> bytes:
         if isinstance(image, (Album, AlbumID)):
             name = self._get_album_path(image)
-        else:
+        elif isinstance(image, (User, UserID)):
             name = self._get_artist_path(image)
-        async with ClientSession() as session:
-            try:
-                response = await self.minio_client.get_object(
-                    bucket_name=self.image_bucket,
-                    object_name=name,
-                    session=session,
-                )
+        else:
+            name = self._get_playlist_path(image)
+        try:
+            response = await self.minio_client.get_object(
+                bucket_name=self.image_bucket,
+                object_name=name,
+            )
 
-                data = await response.read()
-                await response.release()
-                return data
+            data = await response.read()
+            await response.release()
+            return data
 
-            except S3Error as e:
-                if getattr(e, "code", None) == "NoSuchKey":
-                    raise ImageFileNotFoundException(f"Image '{image.id}' not found")
-                raise
+        except S3Error as e:
+            if getattr(e, "code", None) == "NoSuchKey":
+                raise ImageFileNotFoundException(f"Image '{image.id}' not found")
+            raise
 
-    async def get_track_stats(self, track: Track):
+    async def get_track_stats(self, track: Track) -> MusicFileStats:
         try:
             stat = await self.minio_client.stat_object(
                 self.track_bucket, self._get_track_path(track)
@@ -151,11 +157,15 @@ class MinioMusicFileRepository(IMusicFileRepository):
                 )
             raise
 
-    async def delete_image(self, image: Album | AlbumID | Artist | ArtistID) -> None:
+    async def delete_image(
+        self, image: Album | AlbumID | User | UserID | Playlist | PlaylistID
+    ) -> None:
         if isinstance(image, (Album, AlbumID)):
             name = self._get_album_path(image)
-        else:
+        elif isinstance(image, (User, UserID)):
             name = self._get_artist_path(image)
+        else:
+            name = self._get_playlist_path(image)
         try:
             await self.minio_client.stat_object(self.image_bucket, name)
             await self.minio_client.remove_object(self.image_bucket, name)

@@ -6,6 +6,37 @@ from datetime import date
 
 @pytest.mark.asyncio
 class TestTrackEndpoints:
+    async def _create_user_as_artist(self, client: AsyncClient, username: str) -> int:
+        user_params = {
+            "name": username,
+            "username": username,
+            "password": "testpassword",
+            "description": "ART",
+        }
+        resp = await client.post(
+            "/user/register/",
+            params=user_params,
+            files={"cover_file": ("", "", "")},
+        )
+        assert resp.status_code == status.HTTP_201_CREATED, (
+            f"Failed to create user: {resp.text}"
+        )
+
+        resp_get_artist = await client.get(
+            "/users/artist/", params={"username": username}
+        )
+        assert resp_get_artist.status_code == status.HTTP_200_OK, (
+            f"Failed to retrieve artist: {resp_get_artist.text}"
+        )
+        artists = resp_get_artist.json()
+        assert len(artists) > 0, (
+            f"Artist with username {username} not found after creation."
+        )
+        return artists[0]["id"]
+
+    async def _delete_user(self, client: AsyncClient, user_id: int):
+        await client.delete("/user/", params={"id": user_id})
+
     async def _create_genre(self, client: AsyncClient, name="TestGenre") -> int:
         resp = await client.post("/genre/", params={"name": name})
         assert resp.status_code == status.HTTP_201_CREATED
@@ -13,17 +44,6 @@ class TestTrackEndpoints:
 
     async def _delete_genre(self, client: AsyncClient, genre_id: int):
         await client.delete("/genre/", params={"id": genre_id})
-
-    async def _create_artist(self, client: AsyncClient, name="TestArtist") -> int:
-        resp = await client.post(
-            "/artist/", params={"name": name, "description": "desc"}
-        )
-        assert resp.status_code == status.HTTP_201_CREATED
-        return resp.json()["id"]
-
-    async def _delete_artist(self, client: AsyncClient, artist_id: int):
-        await client.delete("/artist/image/", params={"id": artist_id})
-        await client.delete("/artist/", params={"id": artist_id})
 
     async def _create_album(
         self, client: AsyncClient, artist_id: int, name="TestAlbum"
@@ -38,16 +58,15 @@ class TestTrackEndpoints:
         return resp.json()["id"]
 
     async def _delete_album(self, client: AsyncClient, album_id: int):
-        await client.delete("/album/image/", params={"id": album_id})
         await client.delete("/album/", params={"id": album_id})
 
     async def test_create_single_success_and_errors(self, async_client: AsyncClient):
         genre_id = await self._create_genre(async_client, "SingleGenre")
-        artist_id = await self._create_artist(async_client, "SingleArtist")
+        user_id = await self._create_user_as_artist(async_client, "SingleUser")
 
         params = {
             "name": "MySingle",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "genre_id": genre_id,
             "release_date": date.today().isoformat(),
         }
@@ -67,18 +86,18 @@ class TestTrackEndpoints:
 
         await async_client.delete("/track/", params={"id": tid})
         await self._delete_genre(async_client, genre_id)
-        await self._delete_artist(async_client, artist_id)
+        await self._delete_user(async_client, user_id)
 
     async def test_create_track_to_album_success_and_not_found(
         self, async_client: AsyncClient
     ):
         genre_id = await self._create_genre(async_client, "AlbumTrackGenre")
-        artist_id = await self._create_artist(async_client, "AlbumTrackArtist")
-        album_id = await self._create_album(async_client, artist_id, "AlbumForTrack")
+        user_id = await self._create_user_as_artist(async_client, "AlbumTrackUser")
+        album_id = await self._create_album(async_client, user_id, "AlbumForTrack")
 
         params = {
             "name": "MyAlbumTrack",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "album_id": album_id,
             "genre_id": genre_id,
             "release_date": date.today().isoformat(),
@@ -96,14 +115,14 @@ class TestTrackEndpoints:
         await async_client.delete("/track/", params={"id": tid})
         await self._delete_album(async_client, album_id)
         await self._delete_genre(async_client, genre_id)
-        await self._delete_artist(async_client, artist_id)
+        await self._delete_user(async_client, user_id)
 
     async def test_stream_track_variations(self, async_client: AsyncClient):
         genre_id = await self._create_genre(async_client, "StreamGenre")
-        artist_id = await self._create_artist(async_client, "StreamArtist")
+        user_id = await self._create_user_as_artist(async_client, "StreamUser")
         params = {
             "name": "StreamSingle",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "genre_id": genre_id,
             "release_date": date.today().isoformat(),
         }
@@ -134,14 +153,14 @@ class TestTrackEndpoints:
 
         await async_client.delete("/track/", params={"id": tid})
         await self._delete_genre(async_client, genre_id)
-        await self._delete_artist(async_client, artist_id)
+        await self._delete_user(async_client, user_id)
 
     async def test_get_track_and_list(self, async_client: AsyncClient):
         genre_id = await self._create_genre(async_client, "ListTrackGenre")
-        artist_id = await self._create_artist(async_client, "ListTrackArtist")
+        user_id = await self._create_user_as_artist(async_client, "ListTrackUser")
         single_params = {
             "name": "ListSingle",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "genre_id": genre_id,
             "release_date": date.today().isoformat(),
         }
@@ -163,14 +182,14 @@ class TestTrackEndpoints:
 
         await async_client.delete("/track/", params={"id": tid})
         await self._delete_genre(async_client, genre_id)
-        await self._delete_artist(async_client, artist_id)
+        await self._delete_user(async_client, user_id)
 
     async def test_track_image_endpoints(self, async_client: AsyncClient):
         genre_id = await self._create_genre(async_client, "ImgTrackGenre")
-        artist_id = await self._create_artist(async_client, "ImgTrackArtist")
+        user_id = await self._create_user_as_artist(async_client, "ImgTrackUser")
         params = {
             "name": "ImgTrack",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "genre_id": genre_id,
             "release_date": date.today().isoformat(),
         }
@@ -196,16 +215,16 @@ class TestTrackEndpoints:
 
         await async_client.delete("/track/", params={"id": tid})
         await self._delete_genre(async_client, genre_id)
-        await self._delete_artist(async_client, artist_id)
+        await self._delete_user(async_client, user_id)
 
     async def test_update_track_metadata_cover_and_file(
         self, async_client: AsyncClient
     ):
         genre_id = await self._create_genre(async_client, "UpdTrackGenre")
-        artist_id = await self._create_artist(async_client, "UpdTrackArtist")
+        user_id = await self._create_user_as_artist(async_client, "UpdTrackUser")
         params = {
             "name": "UpdTrack",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "genre_id": genre_id,
             "release_date": date.today().isoformat(),
         }
@@ -217,7 +236,7 @@ class TestTrackEndpoints:
         upd_params = {
             "id": tid,
             "name": "UpdTrackNew",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "genre_id": genre_id,
             "album_id": cr.json().get("album_id", 0),
             "release_date": date.today().isoformat(),
@@ -242,17 +261,17 @@ class TestTrackEndpoints:
 
         await async_client.delete("/track/", params={"id": tid})
         await self._delete_genre(async_client, genre_id)
-        await self._delete_artist(async_client, artist_id)
+        await self._delete_user(async_client, user_id)
 
     async def test_create_track_missing_fields_and_invalid_types(
         self, async_client: AsyncClient
     ):
         genre_id = await self._create_genre(async_client, "InvalidDataGenre")
-        artist_id = await self._create_artist(async_client, "InvalidDataArtist")
+        user_id = await self._create_user_as_artist(async_client, "InvalidDataUser")
 
         params = {
             "name": "BadTrack",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "album_id": 0,
             "genre_id": genre_id,
             "release_date": date.today().isoformat(),
@@ -265,16 +284,16 @@ class TestTrackEndpoints:
         assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
         await self._delete_genre(async_client, genre_id)
-        await self._delete_artist(async_client, artist_id)
+        await self._delete_user(async_client, user_id)
 
     async def test_get_tracks_with_filters(self, async_client: AsyncClient):
         genre_id = await self._create_genre(async_client, "FilterGenre")
-        artist_id = await self._create_artist(async_client, "FilterArtist")
-        album_id = await self._create_album(async_client, artist_id, "FilterAlbum")
+        user_id = await self._create_user_as_artist(async_client, "FilterUser")
+        album_id = await self._create_album(async_client, user_id, "FilterAlbum")
 
         params = {
             "name": "FilterTrack",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "album_id": album_id,
             "genre_id": genre_id,
             "release_date": date.today().isoformat(),
@@ -287,7 +306,7 @@ class TestTrackEndpoints:
         assert r1.status_code == status.HTTP_200_OK
         assert any(t["id"] == tid for t in r1.json())
 
-        r2 = await async_client.get("/tracks/", params={"artist_id": artist_id})
+        r2 = await async_client.get("/tracks/", params={"artist_id": user_id})
         assert r2.status_code == status.HTTP_200_OK
 
         r3 = await async_client.get("/tracks/", params={"album_id": album_id})
@@ -296,7 +315,7 @@ class TestTrackEndpoints:
         await async_client.delete("/track/", params={"id": tid})
         await self._delete_genre(async_client, genre_id)
         await self._delete_album(async_client, album_id)
-        await self._delete_artist(async_client, artist_id)
+        await self._delete_user(async_client, user_id)
 
     async def test_update_track_not_found(self, async_client: AsyncClient):
         params = {

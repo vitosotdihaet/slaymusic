@@ -5,18 +5,40 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 class TestAlbumEndpoints:
-    async def _create_artist(self, client: AsyncClient, name: str) -> int:
+    async def _create_user_as_artist(self, client: AsyncClient, username: str) -> int:
+        user_params = {
+            "name": username,
+            "username": username,
+            "password": "testpassword",
+            "description": "ART",
+        }
+
         resp = await client.post(
-            "/artist/", params={"name": name, "description": "ART"}
+            "/user/register/",
+            params=user_params,
+            files={"cover_file": ("", "", "")},
         )
-        assert resp.status_code == status.HTTP_201_CREATED
-        return resp.json()["id"]
+        assert resp.status_code == status.HTTP_201_CREATED, (
+            f"Failed to create user: {resp.text}"
+        )
+
+        resp_get_artist = await client.get(
+            "/users/artist/", params={"username": username}
+        )
+        assert resp_get_artist.status_code == status.HTTP_200_OK, (
+            f"Failed to retrieve artist: {resp_get_artist.text}"
+        )
+        artists = resp_get_artist.json()
+        assert len(artists) > 0, (
+            f"Artist with username {username} not found after creation."
+        )
+        return artists[0]["id"]
 
     async def test_create_album_without_image_success(self, async_client: AsyncClient):
-        artist_id = await self._create_artist(async_client, "NoImgAlbumArtist")
+        user_id = await self._create_user_as_artist(async_client, "NoImgAlbumUser")
         params = {
             "name": "NoImgAlbum",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "release_date": "2025-01-01",
         }
         resp = await async_client.post("/album/", params=params)
@@ -24,13 +46,13 @@ class TestAlbumEndpoints:
         aid = resp.json()["id"]
 
         await async_client.delete("/album/", params={"id": aid})
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})
 
     async def test_create_album_with_image_success(self, async_client: AsyncClient):
-        artist_id = await self._create_artist(async_client, "ImgAlbumArtist")
+        user_id = await self._create_user_as_artist(async_client, "ImgAlbumUser")
         params = {
             "name": "ImgAlbum",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "release_date": "2025-02-02",
         }
         files = {"cover_file": ("cover.png", b"fake", "image/png")}
@@ -39,19 +61,19 @@ class TestAlbumEndpoints:
         aid = resp.json()["id"]
 
         await async_client.delete("/album/", params={"id": aid})
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})
 
     async def test_create_album_validation_error(self, async_client: AsyncClient):
         resp = await async_client.post("/album/", params={})
         assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_get_album_success(self, async_client: AsyncClient):
-        artist_id = await self._create_artist(async_client, "GetAlbArtist")
+        user_id = await self._create_user_as_artist(async_client, "GetAlbUser")
         create = await async_client.post(
             "/album/",
             params={
                 "name": "GetAlbum",
-                "artist_id": artist_id,
+                "artist_id": user_id,
                 "release_date": "2025-03-03",
             },
         )
@@ -61,19 +83,19 @@ class TestAlbumEndpoints:
         assert resp.status_code == status.HTTP_200_OK
 
         await async_client.delete("/album/", params={"id": aid})
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})
 
     async def test_get_album_not_found(self, async_client: AsyncClient):
         resp = await async_client.get("/album/", params={"id": 999999})
         assert resp.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_get_albums_list_and_empty(self, async_client: AsyncClient):
-        artist_id = await self._create_artist(async_client, "ListAlbArtist")
+        user_id = await self._create_user_as_artist(async_client, "ListAlbUser")
         create = await async_client.post(
             "/album/",
             params={
                 "name": "ListAlbum",
-                "artist_id": artist_id,
+                "artist_id": user_id,
                 "release_date": "2025-04-04",
             },
         )
@@ -88,18 +110,18 @@ class TestAlbumEndpoints:
         assert resp_empty.status_code == status.HTTP_200_OK
 
         await async_client.delete("/album/", params={"id": aid})
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})
 
     async def test_get_album_image_success_and_not_found(
         self, async_client: AsyncClient
     ):
-        artist_id = await self._create_artist(async_client, "ImgFetchAlbArtist")
+        user_id = await self._create_user_as_artist(async_client, "ImgFetchAlbUser")
         files = {"cover_file": ("c.png", b"\x89PNG", "image/png")}
         create = await async_client.post(
             "/album/",
             params={
                 "name": "ImgFetchAlbum",
-                "artist_id": artist_id,
+                "artist_id": user_id,
                 "release_date": "2025-05-05",
             },
             files=files,
@@ -113,17 +135,17 @@ class TestAlbumEndpoints:
         assert resp_nf.status_code == status.HTTP_404_NOT_FOUND
 
         await async_client.delete("/album/", params={"id": aid})
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})
 
     async def test_update_metadata_success_and_not_found(
         self, async_client: AsyncClient
     ):
-        artist_id = await self._create_artist(async_client, "MetaAlbArtist")
+        user_id = await self._create_user_as_artist(async_client, "MetaAlbUser")
         create = await async_client.post(
             "/album/",
             params={
                 "name": "MetaAlbumOld",
-                "artist_id": artist_id,
+                "artist_id": user_id,
                 "release_date": "2025-06-06",
             },
         )
@@ -134,7 +156,7 @@ class TestAlbumEndpoints:
             params={
                 "id": aid,
                 "name": "MetaAlbumNew",
-                "artist_id": artist_id,
+                "artist_id": user_id,
                 "release_date": "2025-07-07",
             },
         )
@@ -145,22 +167,22 @@ class TestAlbumEndpoints:
             params={
                 "id": 555555,
                 "name": "X",
-                "artist_id": artist_id,
+                "artist_id": user_id,
                 "release_date": "2025-08-08",
             },
         )
         assert nf.status_code == status.HTTP_404_NOT_FOUND
 
         await async_client.delete("/album/", params={"id": aid})
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})
 
     async def test_update_image_success_and_not_found(self, async_client: AsyncClient):
-        artist_id = await self._create_artist(async_client, "UpdImgAlbArtist")
+        user_id = await self._create_user_as_artist(async_client, "UpdImgAlbUser")
         create = await async_client.post(
             "/album/",
             params={
                 "name": "UpdImgAlbum",
-                "artist_id": artist_id,
+                "artist_id": user_id,
                 "release_date": "2025-09-09",
             },
         )
@@ -177,15 +199,15 @@ class TestAlbumEndpoints:
         assert nf.status_code == status.HTTP_404_NOT_FOUND
 
         await async_client.delete("/album/", params={"id": aid})
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})
 
     async def test_delete_album_success_and_not_found(self, async_client: AsyncClient):
-        artist_id = await self._create_artist(async_client, "DelAlbArtist")
+        user_id = await self._create_user_as_artist(async_client, "DelAlbUser")
         create = await async_client.post(
             "/album/",
             params={
                 "name": "DelAlbum",
-                "artist_id": artist_id,
+                "artist_id": user_id,
                 "release_date": "2025-10-10",
             },
         )
@@ -200,18 +222,18 @@ class TestAlbumEndpoints:
         resp2 = await async_client.delete("/album/", params={"id": 777777})
         assert resp2.status_code == status.HTTP_404_NOT_FOUND
 
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})
 
     async def test_delete_album_image_success_and_not_found(
         self, async_client: AsyncClient
     ):
-        artist_id = await self._create_artist(async_client, "DelImgAlbArtist")
+        user_id = await self._create_user_as_artist(async_client, "DelImgAlbUser")
         files = {"cover_file": ("to_del.png", b"\x89PNG", "image/png")}
         create = await async_client.post(
             "/album/",
             params={
                 "name": "DelImgAlbum",
-                "artist_id": artist_id,
+                "artist_id": user_id,
                 "release_date": "2025-11-11",
             },
             files=files,
@@ -228,7 +250,7 @@ class TestAlbumEndpoints:
         assert resp2.status_code == status.HTTP_404_NOT_FOUND
 
         await async_client.delete("/album/", params={"id": aid})
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})
 
     async def test_create_album_with_nonexistent_artist(
         self, async_client: AsyncClient
@@ -239,13 +261,13 @@ class TestAlbumEndpoints:
             "release_date": "2025-01-01",
         }
         resp = await async_client.post("/album/", params=params)
-        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_get_albums_with_date_filter(self, async_client: AsyncClient):
-        artist_id = await self._create_artist(async_client, "FilterDateArtist")
+        user_id = await self._create_user_as_artist(async_client, "FilterDateUser")
         params = {
             "name": "FilterAlbum",
-            "artist_id": artist_id,
+            "artist_id": user_id,
             "release_date": "2025-05-05",
         }
         create_resp = await async_client.post("/album/", params=params)
@@ -259,4 +281,4 @@ class TestAlbumEndpoints:
         assert any(album["id"] == aid for album in resp.json())
 
         await async_client.delete("/album/", params={"id": aid})
-        await async_client.delete("/artist/", params={"id": artist_id})
+        await async_client.delete("/user/", params={"id": user_id})

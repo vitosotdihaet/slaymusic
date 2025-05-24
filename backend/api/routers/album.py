@@ -7,15 +7,14 @@ from fastapi import (
     Depends,
 )
 from fastapi.responses import Response
-from dto.music import NewAlbum, Album, AlbumID, AlbumSearchParams
+from dto.music import NewAlbum, Album, AlbumID, AlbumSearchParams, UpdateAlbum
 from services.music import MusicService
 from configs.depends import get_music_service
 from exceptions.music import (
-    MusicBaseException,
     AlbumNotFoundException,
     ImageFileNotFoundException,
-    ArtistNotFoundException,
 )
+from exceptions.accounts import UserNotFoundException
 
 router = APIRouter(prefix="/album", tags=["album"])
 
@@ -42,8 +41,8 @@ async def create_album(
         return await music_service.create_album(
             new_album, cover_bytes, cover_content_type
         )
-    except MusicBaseException as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except UserNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get("/", response_model=Album)
@@ -64,7 +63,7 @@ async def get_albums(
 ):
     try:
         return await music_service.get_albums(params)
-    except ArtistNotFoundException as e:
+    except UserNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
@@ -84,12 +83,12 @@ async def get_album_image(
 
 @router.put("/", response_model=Album)
 async def update_metadata(
-    album: Album = Depends(),
+    album: UpdateAlbum = Depends(),
     music_service: MusicService = Depends(get_music_service),
 ):
     try:
         return await music_service.update_album(album)
-    except (AlbumNotFoundException, ArtistNotFoundException) as e:
+    except (AlbumNotFoundException, UserNotFoundException) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 

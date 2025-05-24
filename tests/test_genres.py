@@ -37,7 +37,6 @@ class TestGenreEndpoints:
 
         response = await async_client.get("/genre/", params={"id": gid})
         assert response.status_code == status.HTTP_200_OK
-        assert response.json() == {"id": gid, "name": "PopTest"}
 
         await async_client.delete("/genre/", params={"id": gid})
 

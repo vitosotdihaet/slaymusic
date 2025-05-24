@@ -14,18 +14,19 @@ from dto.music import (
     NewTrack,
     TrackID,
     TrackSearchParams,
+    UpdateTrack,
 )
 from services.music import MusicService
 from configs.depends import get_music_service
 from exceptions.music import (
     InvalidStartException,
     MusicFileNotFoundException,
-    ArtistNotFoundException,
     TrackNotFoundException,
     AlbumNotFoundException,
     ImageFileNotFoundException,
     GenreNotFoundException,
 )
+from exceptions.accounts import UserNotFoundException
 
 router = APIRouter(prefix="/track", tags=["track"])
 
@@ -52,7 +53,7 @@ async def create_single(
         return await music_service.create_track_single(
             track, data, content_type, cover_bytes, cover_content_type
         )
-    except (GenreNotFoundException, ArtistNotFoundException) as e:
+    except (GenreNotFoundException, UserNotFoundException) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
@@ -69,7 +70,7 @@ async def create_track(
         return await music_service.create_track_to_album(new_track, data, content_type)
     except (
         AlbumNotFoundException,
-        ArtistNotFoundException,
+        UserNotFoundException,
         GenreNotFoundException,
     ) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -137,7 +138,7 @@ async def get_tracks(
     try:
         return await music_service.get_tracks(params)
     except (
-        ArtistNotFoundException,
+        UserNotFoundException,
         AlbumNotFoundException,
         GenreNotFoundException,
     ) as e:
@@ -160,14 +161,14 @@ async def get_image(
 
 @router.put("/", response_model=Track)
 async def update_track(
-    track: Track = Depends(),
+    track: UpdateTrack = Depends(),
     music_service: MusicService = Depends(get_music_service),
 ) -> Track:
     try:
         return await music_service.update_track(track)
     except (
         AlbumNotFoundException,
-        ArtistNotFoundException,
+        UserNotFoundException,
         TrackNotFoundException,
         GenreNotFoundException,
     ) as e:

@@ -11,11 +11,11 @@ class TestTrackQueueEndpoints:
             "username": "testuser",
             "password": "testpass",
         }
-        response = await client.post("/accounts/register", json=register_data)
+        response = await client.post("/user/register/", params=register_data)
         if response.status_code != status.HTTP_201_CREATED:
             response = await client.post(
-                "/accounts/login",
-                json={"username": "testuser", "password": "testpass"},
+                "/user/login/",
+                params={"username": "testuser", "password": "testpass"},
             )
 
         token = response.json()["token"]

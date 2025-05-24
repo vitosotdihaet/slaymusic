@@ -7,14 +7,13 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncEngine,
 )
-from sqlalchemy import text
 
 from configs.environment import settings
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import Document, init_beanie
 
 
-DBS = ["accounts", "music"]
+DBS = ["music"]
 
 
 def get_db_creds(db_name: str) -> dict[str, str]:
@@ -57,17 +56,6 @@ session_makers: dict[str, async_sessionmaker[AsyncSession]] = {
 
 async def get_session_generator(db_name: str) -> async_sessionmaker[AsyncSession]:
     return session_makers[db_name]
-
-
-async def ensure_tables(Base, db_name: str) -> None:
-    async with engines[db_name].begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
-async def ensure_extensions(db_name: str) -> None:
-    async with session_makers[db_name]() as session:
-        await session.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
-        await session.commit()
 
 
 async def init_mongo_db(models: list[type[Document]], db_name: str):

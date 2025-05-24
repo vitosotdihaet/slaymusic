@@ -4,7 +4,7 @@ from fastapi import (
     status,
     Depends,
 )
-from dto.music import GenreID, Genre, NewGenre, GenreSearchParams
+from dto.music import GenreID, Genre, NewGenre, GenreSearchParams, UpdateGenre
 from services.music import MusicService
 from configs.depends import get_music_service
 from exceptions.music import GenreNameAlreadyExistsException, GenreNotFoundException
@@ -51,13 +51,15 @@ async def get_genres(
 
 @router.put("/", response_model=Genre)
 async def update_metadata(
-    genre: Genre = Depends(),
+    genre: UpdateGenre = Depends(),
     music_service: MusicService = Depends(get_music_service),
 ):
     try:
         return await music_service.update_genre(genre)
-    except (GenreNotFoundException, GenreNameAlreadyExistsException) as e:
+    except GenreNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except GenreNameAlreadyExistsException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
