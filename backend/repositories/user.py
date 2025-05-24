@@ -31,10 +31,10 @@ class SQLAlchemyUserRepository(IUserRepository, RepositoryHelpers):
 
     async def create_user(self, new_user: NewRoleUser) -> User:
         async with self.session_factory() as session:
-            query = select(UserModel).where(UserModel.name == new_user.name)
+            query = select(UserModel).where(UserModel.username == new_user.username)
             model = await self._get_one_or_none(query, session)
             if model:
-                raise UserAlreadyExist(f"User '{new_user.name}' already exists")
+                raise UserAlreadyExist(f"User '{new_user.username}' already exists")
             to_add = UserModel(**new_user.model_dump())
             added = await self._add_and_commit(to_add, session)
             return User.model_validate(added, from_attributes=True)
@@ -84,6 +84,11 @@ class SQLAlchemyUserRepository(IUserRepository, RepositoryHelpers):
 
     async def update_user(self, new_user: UpdateUser) -> User:
         async with self.session_factory() as session:
+            if new_user.username:
+                query = select(UserModel).where(UserModel.username == new_user.username)
+                model = await self._get_one_or_none(query, session)
+                if model:
+                    raise UserAlreadyExist(f"User '{new_user.username}' already exists")
             model = await self._get_one_or_none(
                 select(UserModel).where(UserModel.id == new_user.id), session
             )

@@ -159,7 +159,7 @@ async def update_metadata(
 ):
     try:
         return await account_service.update_user(user)
-    except UserNotFoundException as e:
+    except (UserNotFoundException, UserAlreadyExist) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
