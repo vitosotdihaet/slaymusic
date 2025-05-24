@@ -12,3 +12,5 @@ beanie
 motor
 redis[hiredis]
 alembic
+prometheus-fastapi-instrumentator>=6.1.0
+prometheus_client>=0.20.0

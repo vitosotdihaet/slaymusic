@@ -10,6 +10,8 @@ from api.routers import user, playlist, subscribe
 from api.routers import misc
 from api.routers import track_queue
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -31,3 +33,5 @@ app.include_router(playlist.router)
 app.include_router(subscribe.router)
 app.include_router(misc.router)
 app.include_router(track_queue.router)
+
+Instrumentator().instrument(app).expose(app)
