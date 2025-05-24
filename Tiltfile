@@ -26,7 +26,7 @@ for file in yaml_files:
 
 # Set up port forwarding
 k8s_resource(
-    'it-project-music-streaming-service-backend',
+    'slaymusic-backend',
     port_forwards=[
         make_port_forward('BACKEND_PORT')
     ],
@@ -47,7 +47,7 @@ k8s_resource(
 
 # Docker build configuration
 docker_build(
-    'it-project-music-streaming-service-backend-image',
+    'slaymusic-backend-image',
     '.',
     dockerfile='./backend/dockerfile',
     build_args={'BACKEND_PORT': env_vars['BACKEND_PORT']},
