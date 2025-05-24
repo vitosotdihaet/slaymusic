@@ -10,6 +10,8 @@ from api.routers import users
 from api.routers import misc
 from api.routers import track_queue
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -30,3 +32,5 @@ app.include_router(genre.router)
 app.include_router(users.router)
 app.include_router(misc.router)
 app.include_router(track_queue.router)
+
+Instrumentator().instrument(app).expose(app)

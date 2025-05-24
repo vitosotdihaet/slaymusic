@@ -18,6 +18,7 @@ yaml_files = [
     'k8s/mongo-user-activity.yaml',
     'k8s/redis-track-queue.yaml',
     'k8s/redis-track-queue-config.yaml',
+    'k8s/prometheus.yaml',
 ]
 
 for file in yaml_files:
@@ -46,6 +47,13 @@ k8s_resource(
     port_forwards=[
         env_vars['MINIO_WEBUI_PORT']+':9001'
     ]
+)
+
+k8s_resource(
+    'prometheus',
+    port_forwards=[
+        env_vars['PROMETHEUS_PORT']
+    ], resource_deps=[]
 )
 
 # Docker build configuration
