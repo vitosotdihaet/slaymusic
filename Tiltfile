@@ -12,7 +12,7 @@ for line in str(read_file('.env')).splitlines():
 
 yaml_files = [
     'k8s/backend.yaml',
-    'k8s/setup-job.yaml',
+    'k8s/alembic-job.yaml',
     'k8s/psql-music.yaml',
     'k8s/minio.yaml',
     'k8s/mongo-user-activity.yaml',
@@ -29,11 +29,9 @@ for file in yaml_files:
     k8s_yaml(blob(yaml_content))
 
 k8s_resource(
-    'setup-job',
+    'alembic-migrate-job',
     resource_deps=[
-        'minio',
         'postgres-music',
-        'redis-track-queue',
     ],
 )
 
@@ -48,7 +46,7 @@ k8s_resource(
         'postgres-music',
         'mongodb-user-activity',
         'redis-track-queue',
-        'setup-job'
+        'alembic-migrate-job'
     ]
 )
 
@@ -88,7 +86,7 @@ docker_build(
 )
 
 docker_build(
-    'slaymusic-setup-job-image',
+    'slaymusic-alembic-job-image',
     '.',
     dockerfile='./backend/dockerfile',
     build_args={'BACKEND_PORT': env_vars['BACKEND_PORT']},
