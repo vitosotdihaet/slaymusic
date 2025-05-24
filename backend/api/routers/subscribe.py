@@ -1,9 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
-from configs.depends import (
-    get_account_service,
-    get_owner_or_admin,
-)
+from configs.depends import get_account_service, get_owner_or_admin, get_owner_or_user
 from dto.accounts import (
     UserID,
     SubscribersCount,
@@ -27,9 +24,9 @@ router = APIRouter(prefix="/user", tags=["user"])
     status_code=status.HTTP_201_CREATED,
 )
 async def subscribe_to(
-    subscribe: Subscribe = Depends(),
+    _: Subscribe = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    _: UserMiddleware = Depends(get_owner_or_admin(Subscribe, "subscriber_id")),
+    subscribe: UserMiddleware = Depends(get_owner_or_admin(Subscribe, "subscriber_id")),
 ):
     if subscribe.subscriber_id == subscribe.artist_id:
         raise HTTPException(
@@ -45,9 +42,9 @@ async def subscribe_to(
 
 @router.post("/unsubscribe", status_code=status.HTTP_204_NO_CONTENT)
 async def unsubscribe_from(
-    subscribe: Subscribe = Depends(),
+    _: Subscribe = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    _: UserMiddleware = Depends(get_owner_or_admin(Subscribe, "subscriber_id")),
+    subscribe: UserMiddleware = Depends(get_owner_or_admin(Subscribe, "subscriber_id")),
 ):
     try:
         await account_service.unsubscribe_from(subscribe)
@@ -57,9 +54,9 @@ async def unsubscribe_from(
 
 @router.get("/subscriptions", response_model=List[Artist])
 async def get_subscriptions(
-    params: SubscribeSearchParams = Depends(),
+    _: SubscribeSearchParams = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    _: UserMiddleware = Depends(get_owner_or_admin(SubscribeSearchParams, "id")),
+    params: UserMiddleware = Depends(get_owner_or_admin(SubscribeSearchParams, "id")),
 ):
     try:
         return await account_service.get_subscriptions(params)
@@ -69,9 +66,9 @@ async def get_subscriptions(
 
 @router.get("/subscribers", response_model=List[Artist])
 async def get_subscribers(
-    params: SubscribeSearchParams = Depends(),
+    _: SubscribeSearchParams = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    _: UserMiddleware = Depends(get_owner_or_admin(SubscribeSearchParams, "id")),
+    params: UserMiddleware = Depends(get_owner_or_admin(SubscribeSearchParams, "id")),
 ):
     try:
         return await account_service.get_subscribers(params)
@@ -81,10 +78,11 @@ async def get_subscribers(
 
 @router.get("/subscriber-count", response_model=SubscribersCount)
 async def get_subscriber_count(
-    user: UserID = Depends(),
+    _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
+    user_id: UserMiddleware = Depends(get_owner_or_user(UserID, "id")),
 ):
     try:
-        return await account_service.get_subscribe_count(user)
+        return await account_service.get_subscribe_count(user_id)
     except UserNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

@@ -51,7 +51,7 @@ class User(BaseModel):
 
 
 class UpdateUser(BaseModel):
-    id: int
+    id: int | None = None
     name: str | None = None
     description: str | None = None
     username: str | None = None
@@ -105,7 +105,7 @@ class SubscribersCount(BaseModel):
 
 
 class Subscribe(BaseModel):
-    subscriber_id: int
+    subscriber_id: int | None = None
     artist_id: int
 
 
@@ -129,6 +129,6 @@ class PlaylistSearchParams(AccountsSearchParams):
 
 
 class SubscribeSearchParams(BaseModel):
-    id: int
+    id: int | None = None
     skip: int = Field(ge=0, default=0)
     limit: int = Field(ge=1, default=100)

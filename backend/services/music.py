@@ -26,6 +26,7 @@ from dto.music import (
 from exceptions.music import (
     InvalidStartException,
     ImageFileNotFoundException,
+    AlbumNotFoundException,
 )
 
 
@@ -199,7 +200,10 @@ class MusicService:
             await self.music_file_repository.delete_image(album_id)
         except ImageFileNotFoundException:
             pass
-        await self.album_repository.delete_album(album_id)
+        try:
+            await self.album_repository.delete_album(album_id)
+        except AlbumNotFoundException:
+            pass
 
     async def delete_album_image(self, album_id: AlbumID) -> None:
         await self.album_repository.get_album_by_id(album_id)

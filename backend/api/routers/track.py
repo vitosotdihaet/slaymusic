@@ -69,6 +69,9 @@ async def create_track(
     track_file: UploadFile = File(),
     music_service: MusicService = Depends(get_music_service),
     new_track: UserMiddleware = Depends(get_owner_or_admin(NewTrack, "artist_id")),
+    __: UserMiddleware = Depends(
+        require_owner_or_admin(NewTrack, "album_id", "get_album", get_music_service)
+    ),
 ):
     data = await track_file.read()
     content_type = track_file.content_type
@@ -172,6 +175,9 @@ async def update_track(
     music_service: MusicService = Depends(get_music_service),
     _: UserMiddleware = Depends(
         require_owner_or_admin(UpdateTrack, "id", "get_track", get_music_service)
+    ),
+    __: UserMiddleware = Depends(
+        require_owner_or_admin(UpdateTrack, "album_id", "get_album", get_music_service)
     ),
 ) -> Track:
     try:

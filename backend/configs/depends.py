@@ -91,12 +91,28 @@ def get_track_queue_service(request: Request) -> TrackQueueService:
 
 
 security = HTTPBearer()
+optional_bearer = HTTPBearer(auto_error=False)
 
 
 def check_access(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     account_service: AccountService = Depends(get_account_service),
 ) -> UserMiddleware:
+    token = credentials.credentials
+    payload = account_service.verify_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+    return payload
+
+
+def check_access_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_bearer),
+    account_service: AccountService = Depends(get_account_service),
+) -> UserMiddleware | None:
+    if not credentials or not credentials.credentials:
+        return None
     token = credentials.credentials
     payload = account_service.verify_token(token)
     if not payload:
@@ -117,11 +133,18 @@ def check_admin_access(
 def get_owner_or_user(model: Type[BaseModel], field_name: str) -> Callable:
     def dependency(
         body: model = Depends(model),  # type: ignore
-        current_user: UserMiddleware = Depends(check_access),
+        current_user: UserMiddleware | None = Depends(check_access_optional),
     ) -> BaseModel:
-        target_id = getattr(body, field_name, None)
-        if target_id is None:
+        explicit_id = getattr(body, field_name, None)
+        if explicit_id is not None:
+            target_id = explicit_id
+        elif current_user is not None:
             target_id = current_user.id
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either set the field or be logged in",
+            )
         setattr(body, field_name, target_id)
 
         return body
@@ -165,6 +188,8 @@ def require_owner_or_admin(
         service: MusicService = Depends(service_dependency),
     ) -> UserMiddleware:
         body_id = getattr(body, id_field_name, None)
+        if body_id is None:
+            return current_user
 
         get_object_method = getattr(service, get_method_name_in_service, None)
 
