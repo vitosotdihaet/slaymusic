@@ -1,3 +1,10 @@
+from dto.track_queue import (
+    InQueueID,
+    QueueParameters,
+    QueueSrcDestIDs,
+    TrackInQueueIDs,
+    TrackQueue,
+)
 from dto.music import (
     MusicFileStats,
     Track,
@@ -22,7 +29,6 @@ from dto.user_activity import (
     UserActivityFilter,
     UserActivityPost,
 )
-
 from dto.accounts import (
     User,
     UserID,
@@ -139,3 +145,13 @@ class IUserRepository(Protocol):
     async def remove_track_from_playlist(
         self, playlist_track: PlaylistTrack
     ) -> None: ...
+
+
+class ITrackQueueRepository(Protocol):
+    async def push_left(self, user_id: int, id: TrackID) -> None: ...
+    async def push_right(self, user_id: int, id: TrackID) -> None: ...
+    async def list(self, user_id: int, params: QueueParameters) -> TrackQueue: ...
+    async def delete(self, user_id: int) -> None: ...
+    async def insert(self, user_id: int, ids: TrackInQueueIDs) -> None: ...
+    async def move(self, user_id: int, ids: QueueSrcDestIDs) -> None: ...
+    async def remove(self, user_id: int, id: InQueueID) -> None: ...

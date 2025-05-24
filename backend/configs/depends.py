@@ -1,3 +1,5 @@
+from repositories.track_queue import RedisTrackQueueRepository
+from services.track_queue import TrackQueueService
 from configs.environment import settings
 from services.music import MusicService
 from services.user_activity import UserActivityService
@@ -9,7 +11,7 @@ from repositories.genre import SQLAlchemyGenreRepository
 from services.accounts import AccountService
 from repositories.user_activity import MongoDBUserActivityRepository
 from repositories.accounts import SQLAlchemyUserRepository
-from configs.database import get_session_generator
+from configs.database import get_redis_client_generator, get_session_generator
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -56,6 +58,13 @@ async def lifespan(app: FastAPI):
         app.state.artist_repository,
         app.state.genre_repository,
     )
+
+    app.state.track_queue_repository = await RedisTrackQueueRepository.create(
+        get_redis_client_generator("track-queue"), settings.TRACK_QUEUE_TTL
+    )
+
+    app.state.track_queue_service = TrackQueueService(app.state.track_queue_repository)
+
     yield
 
 
@@ -69,6 +78,10 @@ def get_accounts_service(request: Request) -> AccountService:
 
 def get_music_service(request: Request) -> MusicService:
     return request.app.state.music_service
+
+
+def get_track_queue_service(request: Request) -> TrackQueueService:
+    return request.app.state.track_queue_service
 
 
 security = HTTPBearer()

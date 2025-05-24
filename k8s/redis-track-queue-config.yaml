@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-track-queue-config
+data:
+  config: |
+    timeout 1000
+    appendonly yes
+    save 60 100
+    databases 16
+    user $TRACK_QUEUE_ROOT_USER on >$TRACK_QUEUE_ROOT_PASSWORD ~queue:* +@list +@transaction +DEL +EXPIRE +SCRIPT +EVALSHA
+    user admin on >epic-password-no-one-knows ~* +@all
+    user check resetkeys +PING
+    loglevel debug
+

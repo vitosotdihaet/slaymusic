@@ -34,6 +34,7 @@ spec:
               check_service "postgres-music-service" "postgres-music-service" "$MUSIC_PORT"
               check_service "mongodb-user-activity-service" "mongodb-user-activity-service" "$USER_ACTIVITY_PORT"
               check_service "minio-service" "minio-service" "$MINIO_PORT"
+              check_service "redis-track-queue-service" "redis-track-queue-service" "$TRACK_QUEUE_PORT"
 
               echo "All dependencies are up!"
       containers:

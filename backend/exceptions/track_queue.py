@@ -1,0 +1,2 @@
+class TrackQueueNotFoundException(Exception):
+    pass
