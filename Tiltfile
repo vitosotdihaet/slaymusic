@@ -9,7 +9,6 @@ for line in str(read_file('.env')).splitlines():
     if line.strip() and not line.startswith('#'):
         key, value = line.strip().split('=', 1)
         env_vars[key] = value
-
 yaml_files = [
     'k8s/backend.yaml',
     'k8s/minio.yaml',
