@@ -19,6 +19,7 @@ yaml_files = [
     'k8s/redis-track-queue.yaml',
     'k8s/redis-track-queue-config.yaml',
     'k8s/prometheus.yaml',
+    'k8s/grafana.yaml',
 ]
 
 for file in yaml_files:
@@ -63,6 +64,13 @@ k8s_resource(
     port_forwards=[
         env_vars['PROMETHEUS_PORT']
     ], resource_deps=[]
+)
+
+k8s_resource(
+    'grafana',
+    port_forwards=[
+        env_vars['GRAFANA_PORT']
+    ], resource_deps=['prometheus']
 )
 
 # Docker build configuration

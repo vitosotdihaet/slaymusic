@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     AUTH_ACCESS_TOKEN_EXPIRED_MINUTES: int
 
     PROMETHEUS_PORT: int
+    GRAFANA_PORT: int
 
     class Config:
         env_file = ".env"
