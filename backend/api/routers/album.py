@@ -19,7 +19,7 @@ from services.music import MusicService
 from configs.depends import (
     get_music_service,
     require_owner_or_admin,
-    get_owner_or_admin,
+    get_login_or_admin,
 )
 from exceptions.music import (
     AlbumNotFoundException,
@@ -39,7 +39,7 @@ async def create_album(
     _: NewAlbum = Depends(),
     cover_file: UploadFile | str | None = None,
     music_service: MusicService = Depends(get_music_service),
-    new_album: UserMiddleware = Depends(get_owner_or_admin(NewAlbum, "artist_id")),
+    new_album: UserMiddleware = Depends(get_login_or_admin(NewAlbum, "artist_id")),
 ):
     cover_bytes = None
     cover_content_type = None

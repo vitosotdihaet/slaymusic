@@ -130,7 +130,7 @@ def check_admin_access(
     return user_data
 
 
-def get_owner_or_user(model: Type[BaseModel], field_name: str) -> Callable:
+def get_login_or_user(model: Type[BaseModel], field_name: str) -> Callable:
     def dependency(
         body: model = Depends(model),  # type: ignore
         current_user: UserMiddleware | None = Depends(check_access_optional),
@@ -152,7 +152,7 @@ def get_owner_or_user(model: Type[BaseModel], field_name: str) -> Callable:
     return dependency
 
 
-def get_owner_or_admin(model: Type[BaseModel], field_name: str) -> Callable:
+def get_login_or_admin(model: Type[BaseModel], field_name: str) -> Callable:
     def dependency(
         body: model = Depends(model),  # type: ignore
         current_user: UserMiddleware = Depends(check_access),

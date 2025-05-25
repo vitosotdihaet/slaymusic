@@ -5,8 +5,8 @@ from fastapi.responses import Response
 from services.accounts import AccountService
 from configs.depends import (
     get_account_service,
-    get_owner_or_admin,
-    get_owner_or_user,
+    get_login_or_admin,
+    get_login_or_user,
     check_admin_access,
 )
 from exceptions.accounts import (
@@ -89,7 +89,7 @@ async def register(
 async def get_user(
     _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    user: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
+    user: UserMiddleware = Depends(get_login_or_admin(UserID, "id")),
 ):
     try:
         return await account_service.get_user(user)
@@ -113,7 +113,7 @@ async def get_users(
 async def get_artist(
     _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    user_id: UserMiddleware = Depends(get_owner_or_user(UserID, "id")),
+    user_id: UserMiddleware = Depends(get_login_or_user(UserID, "id")),
 ):
     try:
         return await account_service.get_user_artist(user_id)
@@ -138,7 +138,7 @@ async def get_artists(
 async def get_image(
     _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    user_id: UserMiddleware = Depends(get_owner_or_user(UserID, "id")),
+    user_id: UserMiddleware = Depends(get_login_or_user(UserID, "id")),
 ):
     try:
         image_bytes = await account_service.get_user_image(user_id)
@@ -175,7 +175,7 @@ async def login(
 async def update_metadata(
     _: UpdateUser = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    user: UserMiddleware = Depends(get_owner_or_admin(UpdateUser, "id")),
+    user: UserMiddleware = Depends(get_login_or_admin(UpdateUser, "id")),
 ):
     try:
         return await account_service.update_user(user)
@@ -183,14 +183,15 @@ async def update_metadata(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.put("/admin/", response_model=User)
+@router.put("/role/", response_model=User)
 async def update_metadata_with_role(
-    params: UpdateUserRole = Depends(),
+    _: UpdateUserRole = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    _: UserMiddleware = Depends(check_admin_access),
+    __: UserMiddleware = Depends(check_admin_access),
+    user: UserMiddleware = Depends(get_login_or_admin(UpdateUser, "id")),
 ):
     try:
-        return await account_service.update_user(params)
+        return await account_service.update_user(user)
     except UserNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -200,7 +201,7 @@ async def update_image(
     _: UserID = Depends(),
     cover_file: UploadFile = File(),
     account_service: AccountService = Depends(get_account_service),
-    user: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
+    user: UserMiddleware = Depends(get_login_or_admin(UserID, "id")),
 ):
     cover_bytes = await cover_file.read()
     cover_content_type = cover_file.content_type
@@ -217,7 +218,7 @@ async def update_image(
 async def delete_user(
     _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    user: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
+    user: UserMiddleware = Depends(get_login_or_admin(UserID, "id")),
 ):
     try:
         await account_service.delete_user(user)
@@ -229,7 +230,7 @@ async def delete_user(
 async def delete_user_image(
     _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    user: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
+    user: UserMiddleware = Depends(get_login_or_admin(UserID, "id")),
 ):
     try:
         await account_service.delete_user_image(user)

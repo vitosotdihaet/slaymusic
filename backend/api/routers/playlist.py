@@ -21,7 +21,7 @@ from services.accounts import AccountService
 from configs.depends import (
     get_account_service,
     require_owner_or_admin,
-    get_owner_or_admin,
+    get_login_or_admin,
 )
 from exceptions.accounts import (
     UserNotFoundException,
@@ -44,7 +44,7 @@ async def create_playlist(
     image_file: UploadFile | str | None = None,
     accounts_service: AccountService = Depends(get_account_service),
     new_playlist: UserMiddleware = Depends(
-        get_owner_or_admin(NewPlaylist, "author_id")
+        get_login_or_admin(NewPlaylist, "author_id")
     ),
 ):
     image_bytes = None

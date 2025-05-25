@@ -20,7 +20,7 @@ from dto.accounts import UserMiddleware
 from services.music import MusicService
 from configs.depends import (
     get_music_service,
-    get_owner_or_admin,
+    get_login_or_admin,
     require_owner_or_admin,
 )
 from exceptions.music import (
@@ -42,7 +42,7 @@ async def create_single(
     track_file: UploadFile = File(),
     cover_file: UploadFile | str | None = None,
     music_service: MusicService = Depends(get_music_service),
-    track: UserMiddleware = Depends(get_owner_or_admin(NewSingle, "artist_id")),
+    track: UserMiddleware = Depends(get_login_or_admin(NewSingle, "artist_id")),
 ):
     data = await track_file.read()
     content_type = track_file.content_type
@@ -68,7 +68,7 @@ async def create_track(
     _: NewTrack = Depends(),
     track_file: UploadFile = File(),
     music_service: MusicService = Depends(get_music_service),
-    new_track: UserMiddleware = Depends(get_owner_or_admin(NewTrack, "artist_id")),
+    new_track: UserMiddleware = Depends(get_login_or_admin(NewTrack, "artist_id")),
     __: UserMiddleware = Depends(
         require_owner_or_admin(NewTrack, "album_id", "get_album", get_music_service)
     ),

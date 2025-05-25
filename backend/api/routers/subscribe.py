@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
-from configs.depends import get_account_service, get_owner_or_admin, get_owner_or_user
+from configs.depends import get_account_service, get_login_or_admin, get_login_or_user
 from dto.accounts import (
     UserID,
     SubscribersCount,
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/user", tags=["user"])
 async def subscribe_to(
     _: Subscribe = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    subscribe: UserMiddleware = Depends(get_owner_or_admin(Subscribe, "subscriber_id")),
+    subscribe: UserMiddleware = Depends(get_login_or_admin(Subscribe, "subscriber_id")),
 ):
     if subscribe.subscriber_id == subscribe.artist_id:
         raise HTTPException(
@@ -44,7 +44,7 @@ async def subscribe_to(
 async def unsubscribe_from(
     _: Subscribe = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    subscribe: UserMiddleware = Depends(get_owner_or_admin(Subscribe, "subscriber_id")),
+    subscribe: UserMiddleware = Depends(get_login_or_admin(Subscribe, "subscriber_id")),
 ):
     try:
         await account_service.unsubscribe_from(subscribe)
@@ -56,7 +56,7 @@ async def unsubscribe_from(
 async def get_subscriptions(
     _: SubscribeSearchParams = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    params: UserMiddleware = Depends(get_owner_or_admin(SubscribeSearchParams, "id")),
+    params: UserMiddleware = Depends(get_login_or_admin(SubscribeSearchParams, "id")),
 ):
     try:
         return await account_service.get_subscriptions(params)
@@ -68,7 +68,7 @@ async def get_subscriptions(
 async def get_subscribers(
     _: SubscribeSearchParams = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    params: UserMiddleware = Depends(get_owner_or_admin(SubscribeSearchParams, "id")),
+    params: UserMiddleware = Depends(get_login_or_admin(SubscribeSearchParams, "id")),
 ):
     try:
         return await account_service.get_subscribers(params)
@@ -80,7 +80,7 @@ async def get_subscribers(
 async def get_subscriber_count(
     _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    user_id: UserMiddleware = Depends(get_owner_or_user(UserID, "id")),
+    user_id: UserMiddleware = Depends(get_login_or_user(UserID, "id")),
 ):
     try:
         return await account_service.get_subscribe_count(user_id)
