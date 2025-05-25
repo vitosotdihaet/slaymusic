@@ -75,7 +75,8 @@ async def register(
     except AccountsBaseException as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="something wrong while create fav playlist: " + str(e),
+            detail="something went wrong while creating 'favorites' playlist: "
+            + str(e),
         )
 
     user_middleware = UserMiddleware(id=new_user.id, role=UserRole.user)

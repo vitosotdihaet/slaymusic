@@ -60,7 +60,7 @@ async def create_single(
             track, data, content_type, cover_bytes, cover_content_type
         )
     except (GenreNotFoundException, UserNotFoundException) as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.post("/", response_model=Track, status_code=status.HTTP_201_CREATED)
