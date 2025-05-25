@@ -173,9 +173,9 @@ async def login(
 
 @router.put("/", response_model=User)
 async def update_metadata(
-    user: UpdateUser = Depends(),
+    _: UpdateUser = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    _: UserMiddleware = Depends(get_owner_or_admin(UpdateUser, "id")),
+    user: UserMiddleware = Depends(get_owner_or_admin(UpdateUser, "id")),
 ):
     try:
         return await account_service.update_user(user)
@@ -197,10 +197,10 @@ async def update_metadata_with_role(
 
 @router.put("/image/", status_code=status.HTTP_200_OK)
 async def update_image(
-    user: UserID = Depends(),
+    _: UserID = Depends(),
     cover_file: UploadFile = File(),
     account_service: AccountService = Depends(get_account_service),
-    _: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
+    user: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
 ):
     cover_bytes = await cover_file.read()
     cover_content_type = cover_file.content_type
@@ -215,9 +215,9 @@ async def update_image(
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
-    user: UserID = Depends(),
+    _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    _: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
+    user: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
 ):
     try:
         await account_service.delete_user(user)
@@ -227,9 +227,9 @@ async def delete_user(
 
 @router.delete("/image/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user_image(
-    user: UserID = Depends(),
+    _: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    _: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
+    user: UserMiddleware = Depends(get_owner_or_admin(UserID, "id")),
 ):
     try:
         await account_service.delete_user_image(user)
