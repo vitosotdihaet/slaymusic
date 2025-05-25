@@ -26,8 +26,9 @@ class RepositoryHelpers:
 
     @staticmethod
     async def _update_and_commit(instance, new_data, session: AsyncSession):
-        for field, value in new_data.model_dump().items():
-            setattr(instance, field, value)
+        for field, value in new_data.model_dump(exclude_unset=True).items():
+            if value is not None:
+                setattr(instance, field, value)
         await session.commit()
         await session.refresh(instance)
         return instance

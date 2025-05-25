@@ -9,11 +9,6 @@ class Settings(BaseSettings):
     MINIO_MUSIC_BUCKET: str
     MINIO_COVER_BUCKET: str
 
-    ACCOUNTS_ROOT_USER: str
-    ACCOUNTS_ROOT_PASSWORD: str
-    ACCOUNTS_DB: str
-    ACCOUNTS_PORT: int
-
     MUSIC_ROOT_USER: str
     MUSIC_ROOT_PASSWORD: str
     MUSIC_DB: str

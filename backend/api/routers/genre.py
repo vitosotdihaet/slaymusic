@@ -4,9 +4,10 @@ from fastapi import (
     status,
     Depends,
 )
-from dto.music import GenreID, Genre, NewGenre, GenreSearchParams
+from dto.music import GenreID, Genre, NewGenre, GenreSearchParams, UpdateGenre
+from dto.accounts import UserMiddleware
 from services.music import MusicService
-from configs.depends import get_music_service
+from configs.depends import get_music_service, check_admin_access
 from exceptions.music import GenreNameAlreadyExistsException, GenreNotFoundException
 
 router = APIRouter(prefix="/genre", tags=["genre"])
@@ -20,6 +21,7 @@ router = APIRouter(prefix="/genre", tags=["genre"])
 async def create_genre(
     new_genre: NewGenre = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(check_admin_access),
 ):
     try:
         return await music_service.create_genre(new_genre)
@@ -51,19 +53,23 @@ async def get_genres(
 
 @router.put("/", response_model=Genre)
 async def update_metadata(
-    genre: Genre = Depends(),
+    genre: UpdateGenre = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(check_admin_access),
 ):
     try:
         return await music_service.update_genre(genre)
-    except (GenreNotFoundException, GenreNameAlreadyExistsException) as e:
+    except GenreNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except GenreNameAlreadyExistsException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_genre(
     genre_id: GenreID = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(check_admin_access),
 ):
     try:
         await music_service.delete_genre(genre_id)
