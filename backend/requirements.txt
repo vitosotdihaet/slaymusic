@@ -11,3 +11,5 @@ passlib
 beanie
 motor
 redis[hiredis]
+prometheus-fastapi-instrumentator>=6.1.0
+prometheus_client>=0.20.0
