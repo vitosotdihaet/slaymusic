@@ -61,34 +61,6 @@ class AccountService:
         self.album_repository = album_repository
         self.track_repository = track_repository
 
-    @staticmethod
-    async def create(
-        user_repository: IUserRepository,
-        playlist_repository: IPlaylistRepository,
-        music_file_repository: IMusicFileRepository,
-        album_repository: IAlbumRepository,
-        track_repository: ITrackRepository,
-    ) -> "AccountService":
-        service = AccountService(
-            user_repository,
-            playlist_repository,
-            music_file_repository,
-            album_repository,
-            track_repository,
-        )
-        try:
-            await service.create_user(
-                NewRoleUser(
-                    name="admin",
-                    username="admin",
-                    password=env.settings.AUTH_ADMIN_SECRET_KEY,
-                    role=UserRole.admin,
-                )
-            )
-        except:  # noqa: E722
-            pass
-        return service
-
     async def create_user(
         self,
         new_user: NewRoleUser,

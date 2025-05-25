@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI):
         app.state.album_repository,
         app.state.genre_repository,
     )
-    app.state.account_service = await AccountService.create(
+    app.state.account_service = AccountService(
         app.state.user_repository,
         app.state.playlist_repository,
         app.state.music_file_repository,

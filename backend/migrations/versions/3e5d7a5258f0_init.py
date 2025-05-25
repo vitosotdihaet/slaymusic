@@ -10,13 +10,18 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from passlib.context import CryptContext
 
+from models.user import UserRoleEnum
+from configs.environment import settings
 
 # revision identifiers, used by Alembic.
 revision: str = "3e5d7a5258f0"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
+
+pwd_context = CryptContext(schemes=["bcrypt"], bcrypt__rounds=12, deprecated="auto")
 
 
 def upgrade() -> None:
@@ -76,6 +81,32 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("username"),
+    )
+    hashed_admin_password = pwd_context.hash(settings.AUTH_ADMIN_SECRET_KEY)
+    meta = sa.MetaData()
+    users_table = sa.Table(
+        "users",
+        meta,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("name", sa.String),
+        sa.Column("username", sa.String),
+        sa.Column("password", sa.String),
+        sa.Column("role", sa.Enum(UserRoleEnum)),
+        sa.Column("description", sa.Text),
+        sa.Column("created_at", sa.TIMESTAMP),
+        sa.Column("updated_at", sa.TIMESTAMP),
+    )
+
+    op.bulk_insert(
+        users_table,
+        [
+            {
+                "name": "admin",
+                "username": "admin",
+                "password": hashed_admin_password,
+                "role": UserRoleEnum.admin,
+            }
+        ],
     )
     op.create_index(
         "idx_artist_name_gin_trgm",
