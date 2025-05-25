@@ -3,7 +3,12 @@ from typing import Optional
 from fastapi.responses import Response
 
 from services.accounts import AccountService
-from configs.depends import get_account_service, get_owner_or_admin, get_owner_or_user
+from configs.depends import (
+    get_account_service,
+    get_owner_or_admin,
+    get_owner_or_user,
+    check_admin_access,
+)
 from exceptions.accounts import (
     AccountsBaseException,
     UserAlreadyExist,
@@ -18,6 +23,7 @@ from dto.accounts import (
     UserMiddleware,
     UserRole,
     UserSearchParams,
+    ArtistSearchParams,
     UserUsername,
     NewUser,
     FullUser,
@@ -27,6 +33,7 @@ from dto.accounts import (
     NewPlaylist,
     Artist,
     UpdateUser,
+    UpdateUserRole,
 )
 
 
@@ -89,6 +96,18 @@ async def get_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+@router.get("s/", response_model=list[User])
+async def get_users(
+    params: UserSearchParams = Depends(),
+    account_service: AccountService = Depends(get_account_service),
+    _: UserMiddleware = Depends(check_admin_access),
+):
+    try:
+        return await account_service.get_users(params)
+    except UserNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 @router.get("/artist/", response_model=Artist)
 async def get_artist(
     _: UserID = Depends(),
@@ -103,7 +122,7 @@ async def get_artist(
 
 @router.get("s/artist/", response_model=list[Artist])
 async def get_artists(
-    params: UserSearchParams = Depends(),
+    params: ArtistSearchParams = Depends(),
     account_service: AccountService = Depends(get_account_service),
 ):
     try:
@@ -160,6 +179,18 @@ async def update_metadata(
     try:
         return await account_service.update_user(user)
     except (UserNotFoundException, UserAlreadyExist) as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.put("/admin/", response_model=User)
+async def update_metadata_with_role(
+    params: UpdateUserRole = Depends(),
+    account_service: AccountService = Depends(get_account_service),
+    _: UserMiddleware = Depends(check_admin_access),
+):
+    try:
+        return await account_service.update_user(params)
+    except UserNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 

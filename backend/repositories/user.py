@@ -7,7 +7,7 @@ from dto.accounts import (
     UserSearchParams,
     SubscribersCount,
     Subscribe,
-    UpdateUser,
+    UpdateUserRole,
     SubscribeSearchParams,
 )
 from repositories.interfaces import IUserRepository
@@ -66,6 +66,12 @@ class SQLAlchemyUserRepository(IUserRepository, RepositoryHelpers):
                     func.similarity(UserModel.name, params.name) >= params.threshold
                 ).order_by(func.similarity(UserModel.name, params.name).desc())
 
+            if params.username:
+                query = query.filter(
+                    func.similarity(UserModel.username, params.username)
+                    >= params.threshold
+                ).order_by(func.similarity(UserModel.username, params.username).desc())
+
             if params.created_search_start:
                 query = query.where(UserModel.created_at >= params.created_search_start)
 
@@ -82,7 +88,7 @@ class SQLAlchemyUserRepository(IUserRepository, RepositoryHelpers):
             models = await self._get_all(query, session)
             return [User.model_validate(m, from_attributes=True) for m in models]
 
-    async def update_user(self, new_user: UpdateUser) -> User:
+    async def update_user(self, new_user: UpdateUserRole) -> User:
         async with self.session_factory() as session:
             if new_user.username:
                 query = select(UserModel).where(UserModel.username == new_user.username)

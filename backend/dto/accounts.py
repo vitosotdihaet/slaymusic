@@ -55,6 +55,9 @@ class UpdateUser(BaseModel):
     name: str | None = None
     description: str | None = None
     username: str | None = None
+
+
+class UpdateUserRole(UpdateUser):
     role: UserRole | None = None
 
 
@@ -120,8 +123,12 @@ class AccountsSearchParams(BaseModel):
     updated_search_end: datetime.datetime | None = None
 
 
-class UserSearchParams(AccountsSearchParams):
+class ArtistSearchParams(AccountsSearchParams):
     pass
+
+
+class UserSearchParams(AccountsSearchParams):
+    username: str | None = None
 
 
 class PlaylistSearchParams(AccountsSearchParams):

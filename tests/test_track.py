@@ -3,32 +3,33 @@ from fastapi import status
 from httpx import AsyncClient
 import uuid
 from datetime import date
+import os
 
 
 @pytest.mark.asyncio
 class TestTrackEndpoints:
-    async def _get_auth_headers(self, client: AsyncClient, username: str | None = None):
+    async def _get_auth_headers(
+        self,
+        client: AsyncClient,
+        username: str | None = None,
+        password: str = "testpass",
+    ):
         if username is None:
             username = f"testuser_{uuid.uuid4().hex[:8]}"
         register_data = {
             "name": "testname",
             "username": username,
-            "password": "testpass",
+            "password": password,
         }
         response = await client.post("/user/register/", params=register_data)
         if response.status_code != status.HTTP_201_CREATED:
             response = await client.post(
                 "/user/login/",
-                params={"username": username, "password": "testpass"},
+                params={"username": username, "password": password},
             )
 
         token = response.json()["token"]
         return {"Authorization": f"Bearer {token}", "username": username}
-
-    async def _upgrade_user(self, client: AsyncClient, headers):
-        resp = await client.put("/user/", params={"role": "admin"}, headers=headers)
-        assert resp.status_code == status.HTTP_200_OK
-        return resp
 
     async def _delete_user(self, client: AsyncClient, headers):
         resp = await client.delete("/user/", headers=headers)
@@ -61,21 +62,16 @@ class TestTrackEndpoints:
         assert resp_get_user.status_code == status.HTTP_200_OK
         user_id = resp_get_user.json()["id"]
 
-        await self._upgrade_user(async_client, headers)
-
         return user_id, headers
 
     async def _create_genre(self, async_client: AsyncClient, genre_name: str):
-        headers = await self._get_auth_headers(async_client)
-        resp = await self._upgrade_user(async_client, headers)
-        data = resp.json()
-        username = data["username"]
-        headers = await self._get_auth_headers(async_client, username)
+        headers = await self._get_auth_headers(
+            async_client, "admin", os.getenv("AUTH_ADMIN_SECRET_KEY")
+        )
         params = {"name": genre_name}
         response = await async_client.post("/genre/", params=params, headers=headers)
         assert response.status_code == status.HTTP_201_CREATED
         genre_id = response.json()["id"]
-        await self._delete_user(async_client, headers)
         return genre_id, headers
 
     async def _delete_genre(self, client: AsyncClient, genre_id: int, headers: dict):

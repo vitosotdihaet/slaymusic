@@ -20,6 +20,9 @@ from dto.accounts import (
     UpdateUser,
     UpdatePlaylist,
     SubscribeSearchParams,
+    UserRole,
+    ArtistSearchParams,
+    UpdateUserRole,
 )
 from dto.music import AlbumSearchParams, TrackSearchParams, AlbumID, TrackID
 from repositories.interfaces import (
@@ -58,6 +61,34 @@ class AccountService:
         self.album_repository = album_repository
         self.track_repository = track_repository
 
+    @staticmethod
+    async def create(
+        user_repository: IUserRepository,
+        playlist_repository: IPlaylistRepository,
+        music_file_repository: IMusicFileRepository,
+        album_repository: IAlbumRepository,
+        track_repository: ITrackRepository,
+    ) -> "AccountService":
+        service = AccountService(
+            user_repository,
+            playlist_repository,
+            music_file_repository,
+            album_repository,
+            track_repository,
+        )
+        try:
+            await service.create_user(
+                NewRoleUser(
+                    name="admin",
+                    username="admin",
+                    password=env.settings.AUTH_ADMIN_SECRET_KEY,
+                    role=UserRole.admin,
+                )
+            )
+        except:  # noqa: E722
+            pass
+        return service
+
     async def create_user(
         self,
         new_user: NewRoleUser,
@@ -90,11 +121,18 @@ class AccountService:
     async def get_users(self, params: UserSearchParams) -> list[User]:
         return await self.user_repository.get_users(params)
 
-    async def get_users_artists(self, params: UserSearchParams) -> list[Artist]:
-        users = await self.user_repository.get_users(params)
+    async def get_users_artists(self, params: ArtistSearchParams) -> list[Artist]:
+        users = await self.user_repository.get_users(
+            UserSearchParams.model_validate(params.model_dump())
+        )
         return [Artist.model_validate(u.model_dump()) for u in users]
 
     async def update_user(self, user: UpdateUser) -> User:
+        return await self.user_repository.update_user(
+            UpdateUserRole.model_validate(user.model_dump())
+        )
+
+    async def update_user_with_role(self, user: UpdateUserRole) -> User:
         return await self.user_repository.update_user(user)
 
     async def update_user_image(

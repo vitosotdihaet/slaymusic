@@ -25,11 +25,6 @@ class TestUserEndpoints:
         token = response.json()["token"]
         return {"Authorization": f"Bearer {token}", "username": username}
 
-    async def _upgrade_user(self, client: AsyncClient, headers):
-        resp = await client.put("/user/", params={"role": "admin"}, headers=headers)
-        assert resp.status_code == status.HTTP_200_OK
-        return resp
-
     async def _delete_user(self, client: AsyncClient, headers):
         resp = await client.delete("/user/", headers=headers)
         assert resp.status_code in [
@@ -60,8 +55,6 @@ class TestUserEndpoints:
         resp_get_user = await async_client.get("/user/", headers=headers)
         assert resp_get_user.status_code == status.HTTP_200_OK
         user_id = resp_get_user.json()["id"]
-
-        await self._upgrade_user(async_client, headers)
 
         return user_id, headers
 

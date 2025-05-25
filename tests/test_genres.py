@@ -2,27 +2,33 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 import uuid
+import os
 
 
 @pytest.mark.asyncio
 class TestGenreEndpoints:
-    async def _get_auth_headers(self, client: AsyncClient, username: str | None = None):
+    async def _get_auth_headers(
+        self,
+        client: AsyncClient,
+        username: str | None = None,
+        password: str = "testpass",
+    ):
         if username is None:
             username = f"testuser_{uuid.uuid4().hex[:8]}"
         register_data = {
-            "name": "testicle",
+            "name": "testname",
             "username": username,
-            "password": "testpass",
+            "password": password,
         }
         response = await client.post("/user/register/", params=register_data)
         if response.status_code != status.HTTP_201_CREATED:
             response = await client.post(
                 "/user/login/",
-                params={"username": username, "password": "testpass"},
+                params={"username": username, "password": password},
             )
 
         token = response.json()["token"]
-        return {"Authorization": f"Bearer {token}"}
+        return {"Authorization": f"Bearer {token}", "username": username}
 
     async def _upgrade_user(self, client: AsyncClient, headers):
         resp = await client.put("/user/", params={"role": "admin"}, headers=headers)
@@ -37,12 +43,9 @@ class TestGenreEndpoints:
         ], f"Failed to delete user: {resp.status_code} - {resp.text}"
 
     async def test_create_genre_success(self, async_client: AsyncClient):
-        headers = await self._get_auth_headers(async_client)
-        resp = await self._upgrade_user(async_client, headers)
-        data = resp.json()
-        username = data["username"]
-
-        headers = await self._get_auth_headers(async_client, username)
+        headers = await self._get_auth_headers(
+            async_client, "admin", os.getenv("AUTH_ADMIN_SECRET_KEY")
+        )
         params = {"name": "RockTest"}
         response = await async_client.post("/genre/", params=params, headers=headers)
         assert response.status_code == status.HTTP_201_CREATED
@@ -51,15 +54,11 @@ class TestGenreEndpoints:
         gid = data["id"]
 
         await async_client.delete("/genre/", params={"id": gid}, headers=headers)
-        await self._delete_user(async_client, headers)
 
     async def test_create_genre_duplicate(self, async_client: AsyncClient):
-        headers = await self._get_auth_headers(async_client)
-        resp = await self._upgrade_user(async_client, headers)
-        data = resp.json()
-        username = data["username"]
-
-        auth_headers = await self._get_auth_headers(async_client, username)
+        auth_headers = await self._get_auth_headers(
+            async_client, "admin", os.getenv("AUTH_ADMIN_SECRET_KEY")
+        )
         params = {"name": "JazzTest"}
         first = await async_client.post("/genre/", params=params, headers=auth_headers)
         assert first.status_code == status.HTTP_201_CREATED
@@ -71,15 +70,11 @@ class TestGenreEndpoints:
         assert duplicate.status_code == status.HTTP_400_BAD_REQUEST
 
         await async_client.delete("/genre/", params={"id": gid}, headers=auth_headers)
-        await self._delete_user(async_client, headers)
 
     async def test_get_genre_success(self, async_client: AsyncClient):
-        headers = await self._get_auth_headers(async_client)
-        resp = await self._upgrade_user(async_client, headers)
-        data = resp.json()
-        username = data["username"]
-
-        auth_headers = await self._get_auth_headers(async_client, username)
+        auth_headers = await self._get_auth_headers(
+            async_client, "admin", os.getenv("AUTH_ADMIN_SECRET_KEY")
+        )
         create = await async_client.post(
             "/genre/", params={"name": "PopTest"}, headers=auth_headers
         )
@@ -92,28 +87,20 @@ class TestGenreEndpoints:
         assert response.status_code == status.HTTP_200_OK
 
         await async_client.delete("/genre/", params={"id": gid}, headers=auth_headers)
-        await self._delete_user(async_client, headers)
 
     async def test_get_genre_not_found(self, async_client: AsyncClient):
-        headers = await self._get_auth_headers(async_client)
-        resp = await self._upgrade_user(async_client, headers)
-        data = resp.json()
-        username = data["username"]
-
-        auth_headers = await self._get_auth_headers(async_client, username)
+        auth_headers = await self._get_auth_headers(
+            async_client, "admin", os.getenv("AUTH_ADMIN_SECRET_KEY")
+        )
         response = await async_client.get(
             "/genre/", params={"id": 999999}, headers=auth_headers
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        await self._delete_user(async_client, headers)
 
     async def test_update_genre_success(self, async_client: AsyncClient):
-        headers = await self._get_auth_headers(async_client)
-        resp = await self._upgrade_user(async_client, headers)
-        data = resp.json()
-        username = data["username"]
-
-        auth_headers = await self._get_auth_headers(async_client, username)
+        auth_headers = await self._get_auth_headers(
+            async_client, "admin", os.getenv("AUTH_ADMIN_SECRET_KEY")
+        )
         create = await async_client.post(
             "/genre/", params={"name": "UpdateTestOld"}, headers=auth_headers
         )
@@ -127,15 +114,11 @@ class TestGenreEndpoints:
         assert upd.json()["name"] == "UpdateTestNew"
 
         await async_client.delete("/genre/", params={"id": gid}, headers=auth_headers)
-        await self._delete_user(async_client, headers)
 
     async def test_delete_genre_success_and_not_found(self, async_client: AsyncClient):
-        headers = await self._get_auth_headers(async_client)
-        resp = await self._upgrade_user(async_client, headers)
-        data = resp.json()
-        username = data["username"]
-
-        auth_headers = await self._get_auth_headers(async_client, username)
+        auth_headers = await self._get_auth_headers(
+            async_client, "admin", os.getenv("AUTH_ADMIN_SECRET_KEY")
+        )
         create = await async_client.post(
             "/genre/", params={"name": "DeleteTest"}, headers=auth_headers
         )
@@ -156,4 +139,3 @@ class TestGenreEndpoints:
             "/genre/", params={"id": gid}, headers=auth_headers
         )
         assert extra.status_code == status.HTTP_404_NOT_FOUND
-        await self._delete_user(async_client, headers)
