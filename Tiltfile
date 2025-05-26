@@ -18,6 +18,7 @@ yaml_files = [
     'k8s/mongo-user-activity.yaml',
     'k8s/redis-track-queue.yaml',
     'k8s/redis-track-queue-config.yaml',
+    'k8s/mongo-daily-user-activity.yaml'
 ]
 
 for file in yaml_files:
@@ -38,6 +39,7 @@ k8s_resource(
         'postgres-music',
         'mongodb-user-activity',
         'redis-track-queue',
+        'mongodb-daily-user-activity'
     ]
 )
 
