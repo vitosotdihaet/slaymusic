@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     AUTH_ADMIN_SECRET_KEY: str
     AUTH_ACCESS_TOKEN_EXPIRED_MINUTES: int
 
+    FRONTEND_PORT: int
+    VUE_APP_BACKEND_URL: str
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

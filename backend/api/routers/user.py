@@ -44,17 +44,17 @@ router = APIRouter(prefix="/user", tags=["user"])
     "/register/", response_model=LoginRegister, status_code=status.HTTP_201_CREATED
 )
 async def register(
-    user: NewUser = Depends(),
-    cover_file: UploadFile | str | None = None,
+    user: NewUser,
+    # cover_file: UploadFile | str | None = None,
     account_service: AccountService = Depends(get_account_service),
 ):
     cover_bytes = None
     cover_content_type = None
-    if cover_file == "":
-        cover_file = None
-    if cover_file:
-        cover_bytes = await cover_file.read()
-        cover_content_type = cover_file.content_type
+    # if cover_file == "":
+    #     cover_file = None
+    # if cover_file:
+    #     cover_bytes = await cover_file.read()
+    #     cover_content_type = cover_file.content_type
 
     new_user: Optional[User] = None
     user = NewRoleUser(**user.model_dump(), role=UserRole.user)
@@ -111,9 +111,9 @@ async def get_users(
 
 @router.get("/artist/", response_model=Artist)
 async def get_artist(
-    _: UserID = Depends(),
+    user_id: UserID = Depends(),
     account_service: AccountService = Depends(get_account_service),
-    user_id: UserMiddleware = Depends(get_login_or_user(UserID, "id")),
+    _: UserMiddleware = Depends(get_login_or_user(UserID, "id")),
 ):
     try:
         return await account_service.get_user_artist(user_id)
@@ -149,7 +149,7 @@ async def get_image(
 
 @router.post("/login/", response_model=LoginRegister, status_code=status.HTTP_200_OK)
 async def login(
-    login_user: LoginUser = Depends(),
+    login_user: LoginUser,
     account_service: AccountService = Depends(get_account_service),
 ):
     user: Optional[FullUser] = None
