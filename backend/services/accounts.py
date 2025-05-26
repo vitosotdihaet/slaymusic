@@ -255,5 +255,8 @@ class AccountService:
     ) -> PlaylistTrack:
         return await self.playlist_repository.add_track_to_playlist(playlist_track)
 
+    async def get_tracks_by_playlist(self, playlist: PlaylistID):
+        return await self.playlist_repository.get_tracks_by_playlist(playlist)
+
     async def remove_track_from_playlist(self, playlist_track: PlaylistTrack) -> None:
         await self.playlist_repository.remove_track_from_playlist(playlist_track)
