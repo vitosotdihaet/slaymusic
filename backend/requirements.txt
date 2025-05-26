@@ -11,3 +11,4 @@ passlib
 beanie
 motor
 redis[hiredis]
+alembic

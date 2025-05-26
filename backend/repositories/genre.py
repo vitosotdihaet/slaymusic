@@ -1,9 +1,7 @@
-from dto.music import Genre, GenreID, NewGenre, GenreSearchParams
+from dto.music import Genre, GenreID, NewGenre, GenreSearchParams, UpdateGenre
 from repositories.interfaces import IGenreRepository
 from repositories.helpers import RepositoryHelpers
-from models.music import GenreModel
-from models.base_model import MusicModelBase
-from configs.database import ensure_tables, ensure_extensions
+from models.genre import GenreModel
 from exceptions.music import GenreNotFoundException, GenreNameAlreadyExistsException
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -13,14 +11,6 @@ from sqlalchemy import select, delete, func
 class SQLAlchemyGenreRepository(IGenreRepository, RepositoryHelpers):
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
         self.session_factory = session_factory
-
-    @staticmethod
-    async def create(
-        session_factory: async_sessionmaker[AsyncSession],
-    ) -> "SQLAlchemyGenreRepository":
-        await ensure_extensions("music")
-        await ensure_tables(MusicModelBase, "music")
-        return SQLAlchemyGenreRepository(session_factory)
 
     async def create_genre(self, new_genre: NewGenre) -> Genre:
         async with self.session_factory() as session:
@@ -46,6 +36,19 @@ class SQLAlchemyGenreRepository(IGenreRepository, RepositoryHelpers):
         async with self.session_factory() as session:
             query = select(GenreModel)
 
+            if params.created_search_start:
+                query = query.where(
+                    GenreModel.created_at >= params.created_search_start
+                )
+            if params.created_search_end:
+                query = query.where(GenreModel.created_at <= params.created_search_end)
+            if params.updated_search_start:
+                query = query.where(
+                    GenreModel.updated_at >= params.updated_search_start
+                )
+            if params.updated_search_end:
+                query = query.where(GenreModel.updated_at <= params.updated_search_end)
+
             if params.name:
                 query = query.filter(
                     func.similarity(GenreModel.name, params.name) >= params.threshold
@@ -55,7 +58,7 @@ class SQLAlchemyGenreRepository(IGenreRepository, RepositoryHelpers):
             models = await self._get_all(query, session)
             return [Genre.model_validate(m, from_attributes=True) for m in models]
 
-    async def update_genre(self, new_genre: Genre) -> Genre:
+    async def update_genre(self, new_genre: UpdateGenre) -> Genre:
         async with self.session_factory() as session:
             query = select(GenreModel).where(GenreModel.name == new_genre.name)
             model = await self._get_one_or_none(query, session)

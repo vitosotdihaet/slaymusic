@@ -14,10 +14,6 @@ class ImageFileNotFoundException(MusicBaseException):
     pass
 
 
-class ArtistNotFoundException(MusicBaseException):
-    pass
-
-
 class TrackNotFoundException(MusicBaseException):
     pass
 

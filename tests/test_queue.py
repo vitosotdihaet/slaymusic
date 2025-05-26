@@ -5,24 +5,31 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 class TestTrackQueueEndpoints:
-    async def get_auth_headers(self, client: AsyncClient):
+    async def _get_auth_headers(self, client: AsyncClient):
         register_data = {
             "name": "testicle",
             "username": "testuser",
             "password": "testpass",
         }
-        response = await client.post("/accounts/register", json=register_data)
+        response = await client.post("/user/register/", params=register_data)
         if response.status_code != status.HTTP_201_CREATED:
             response = await client.post(
-                "/accounts/login",
-                json={"username": "testuser", "password": "testpass"},
+                "/user/login/",
+                params={"username": "testuser", "password": "testpass"},
             )
 
         token = response.json()["token"]
         return {"Authorization": f"Bearer {token}"}
 
+    async def _delete_user(self, client: AsyncClient, headers):
+        resp = await client.delete("/user/", headers=headers)
+        assert resp.status_code in [
+            status.HTTP_204_NO_CONTENT,
+            status.HTTP_404_NOT_FOUND,
+        ], f"Failed to delete user: {resp.status_code} - {resp.text}"
+
     async def test_queue_lifecycle(self, async_client: AsyncClient):
-        headers = await self.get_auth_headers(async_client)
+        headers = await self._get_auth_headers(async_client)
         test_track_ids = [101, 102, 103, 104]
 
         list_response = await async_client.get("/track_queue/", headers=headers)
@@ -111,8 +118,10 @@ class TestTrackQueueEndpoints:
         list_response = await async_client.get("/track_queue/", headers=headers)
         assert list_response.status_code == status.HTTP_404_NOT_FOUND
 
+        await self._delete_user(async_client, headers)
+
     async def test_queue_operations_errors(self, async_client: AsyncClient):
-        headers = await self.get_auth_headers(async_client)
+        headers = await self._get_auth_headers(async_client)
 
         response = await async_client.post(
             "/track_queue/right", params={"id": -1}, headers=headers
@@ -139,8 +148,10 @@ class TestTrackQueueEndpoints:
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+        await self._delete_user(async_client, headers)
+
     async def test_queue_pagination(self, async_client: AsyncClient):
-        headers = await self.get_auth_headers(async_client)
+        headers = await self._get_auth_headers(async_client)
 
         track_ids = list(range(1, 21))
         for track_id in track_ids:
@@ -168,3 +179,5 @@ class TestTrackQueueEndpoints:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
         await async_client.delete("/track_queue/", headers=headers)
+
+        await self._delete_user(async_client, headers)

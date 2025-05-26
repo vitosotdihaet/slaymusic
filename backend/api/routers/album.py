@@ -7,15 +7,25 @@ from fastapi import (
     Depends,
 )
 from fastapi.responses import Response
-from dto.music import NewAlbum, Album, AlbumID, AlbumSearchParams
+from dto.music import (
+    NewAlbum,
+    Album,
+    AlbumID,
+    AlbumSearchParams,
+    UpdateAlbum,
+)
+from dto.accounts import UserMiddleware
 from services.music import MusicService
-from configs.depends import get_music_service
+from configs.depends import (
+    get_music_service,
+    require_owner_or_admin,
+    get_login_or_admin,
+)
 from exceptions.music import (
-    MusicBaseException,
     AlbumNotFoundException,
     ImageFileNotFoundException,
-    ArtistNotFoundException,
 )
+from exceptions.accounts import UserNotFoundException
 
 router = APIRouter(prefix="/album", tags=["album"])
 
@@ -26,9 +36,10 @@ router = APIRouter(prefix="/album", tags=["album"])
     status_code=status.HTTP_201_CREATED,
 )
 async def create_album(
-    new_album: NewAlbum = Depends(),
+    _: NewAlbum = Depends(),
     cover_file: UploadFile | str | None = None,
     music_service: MusicService = Depends(get_music_service),
+    new_album: UserMiddleware = Depends(get_login_or_admin(NewAlbum, "artist_id")),
 ):
     cover_bytes = None
     cover_content_type = None
@@ -42,8 +53,8 @@ async def create_album(
         return await music_service.create_album(
             new_album, cover_bytes, cover_content_type
         )
-    except MusicBaseException as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except UserNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get("/", response_model=Album)
@@ -64,7 +75,7 @@ async def get_albums(
 ):
     try:
         return await music_service.get_albums(params)
-    except ArtistNotFoundException as e:
+    except UserNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
@@ -84,12 +95,15 @@ async def get_album_image(
 
 @router.put("/", response_model=Album)
 async def update_metadata(
-    album: Album = Depends(),
+    album: UpdateAlbum = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(UpdateAlbum, "id", "get_album", get_music_service)
+    ),
 ):
     try:
         return await music_service.update_album(album)
-    except (AlbumNotFoundException, ArtistNotFoundException) as e:
+    except (AlbumNotFoundException, UserNotFoundException) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
@@ -98,6 +112,9 @@ async def update_image(
     album_id: AlbumID = Depends(),
     cover_file: UploadFile = File(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(AlbumID, "id", "get_album", get_music_service)
+    ),
 ):
     cover_bytes = await cover_file.read()
     cover_content_type = cover_file.content_type
@@ -114,6 +131,9 @@ async def update_image(
 async def delete_album(
     album_id: AlbumID = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(AlbumID, "id", "get_album", get_music_service)
+    ),
 ):
     try:
         await music_service.delete_album(album_id)
@@ -125,6 +145,9 @@ async def delete_album(
 async def delete_album_image(
     album_id: AlbumID = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(AlbumID, "id", "get_album", get_music_service)
+    ),
 ):
     try:
         await music_service.delete_album_image(album_id)

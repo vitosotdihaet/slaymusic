@@ -14,28 +14,35 @@ from dto.music import (
     NewTrack,
     TrackID,
     TrackSearchParams,
+    UpdateTrack,
 )
+from dto.accounts import UserMiddleware
 from services.music import MusicService
-from configs.depends import get_music_service
+from configs.depends import (
+    get_music_service,
+    get_login_or_admin,
+    require_owner_or_admin,
+)
 from exceptions.music import (
     InvalidStartException,
     MusicFileNotFoundException,
-    ArtistNotFoundException,
     TrackNotFoundException,
     AlbumNotFoundException,
     ImageFileNotFoundException,
     GenreNotFoundException,
 )
+from exceptions.accounts import UserNotFoundException
 
 router = APIRouter(prefix="/track", tags=["track"])
 
 
 @router.post("/single/", response_model=Track, status_code=status.HTTP_201_CREATED)
 async def create_single(
-    track: NewSingle = Depends(),
+    _: NewSingle = Depends(),
     track_file: UploadFile = File(),
     cover_file: UploadFile | str | None = None,
     music_service: MusicService = Depends(get_music_service),
+    track: UserMiddleware = Depends(get_login_or_admin(NewSingle, "artist_id")),
 ):
     data = await track_file.read()
     content_type = track_file.content_type
@@ -52,15 +59,19 @@ async def create_single(
         return await music_service.create_track_single(
             track, data, content_type, cover_bytes, cover_content_type
         )
-    except (GenreNotFoundException, ArtistNotFoundException) as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except (GenreNotFoundException, UserNotFoundException) as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.post("/", response_model=Track, status_code=status.HTTP_201_CREATED)
 async def create_track(
-    new_track: NewTrack = Depends(),
+    _: NewTrack = Depends(),
     track_file: UploadFile = File(),
     music_service: MusicService = Depends(get_music_service),
+    new_track: UserMiddleware = Depends(get_login_or_admin(NewTrack, "artist_id")),
+    __: UserMiddleware = Depends(
+        require_owner_or_admin(NewTrack, "album_id", "get_album", get_music_service)
+    ),
 ):
     data = await track_file.read()
     content_type = track_file.content_type
@@ -69,7 +80,7 @@ async def create_track(
         return await music_service.create_track_to_album(new_track, data, content_type)
     except (
         AlbumNotFoundException,
-        ArtistNotFoundException,
+        UserNotFoundException,
         GenreNotFoundException,
     ) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -137,7 +148,7 @@ async def get_tracks(
     try:
         return await music_service.get_tracks(params)
     except (
-        ArtistNotFoundException,
+        UserNotFoundException,
         AlbumNotFoundException,
         GenreNotFoundException,
     ) as e:
@@ -160,14 +171,20 @@ async def get_image(
 
 @router.put("/", response_model=Track)
 async def update_track(
-    track: Track = Depends(),
+    track: UpdateTrack = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(UpdateTrack, "id", "get_track", get_music_service)
+    ),
+    __: UserMiddleware = Depends(
+        require_owner_or_admin(UpdateTrack, "album_id", "get_album", get_music_service)
+    ),
 ) -> Track:
     try:
         return await music_service.update_track(track)
     except (
         AlbumNotFoundException,
-        ArtistNotFoundException,
+        UserNotFoundException,
         TrackNotFoundException,
         GenreNotFoundException,
     ) as e:
@@ -179,6 +196,9 @@ async def update_image(
     track_id: TrackID = Depends(),
     cover_file: UploadFile = File(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(TrackID, "id", "get_track", get_music_service)
+    ),
 ):
     cover_bytes = await cover_file.read()
     cover_content_type = cover_file.content_type
@@ -196,6 +216,9 @@ async def update_track_file(
     track_id: TrackID = Depends(),
     track_file: UploadFile = File(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(TrackID, "id", "get_track", get_music_service)
+    ),
 ):
     file_bytes = await track_file.read()
     file_content_type = track_file.content_type
@@ -216,6 +239,9 @@ async def update_track_file(
 async def delete_track(
     track_id: TrackID = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(TrackID, "id", "get_track", get_music_service)
+    ),
 ):
     try:
         await music_service.delete_track(track_id)
@@ -227,6 +253,9 @@ async def delete_track(
 async def delete_track_image(
     track_id: TrackID = Depends(),
     music_service: MusicService = Depends(get_music_service),
+    _: UserMiddleware = Depends(
+        require_owner_or_admin(TrackID, "id", "get_track", get_music_service)
+    ),
 ):
     try:
         await music_service.delete_track_image(track_id)

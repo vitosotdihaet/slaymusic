@@ -2,6 +2,8 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: redis-track-queue-pvc
+  annotations:
+    tilt.dev/down-policy: keep
 spec:
   accessModes:
     - ReadWriteOnce
@@ -75,8 +77,8 @@ spec:
           configMap:
             name: redis-track-queue-config
             items:
-            - key: config
-              path: redis.conf
+              - key: config
+                path: redis.conf
 ---
 apiVersion: v1
 kind: Service

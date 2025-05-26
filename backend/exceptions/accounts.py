@@ -6,6 +6,14 @@ class UserNotFoundException(AccountsBaseException):
     pass
 
 
+class SubscriptionNotFoundException(AccountsBaseException):
+    pass
+
+
+class SubscriptionAlreadyExist(AccountsBaseException):
+    pass
+
+
 class InvalidTokenException(AccountsBaseException):
     pass
 
@@ -19,4 +27,12 @@ class UserAlreadyExist(AccountsBaseException):
 
 
 class PlaylistNotFoundException(AccountsBaseException):
+    pass
+
+
+class PlaylistTrackNotFoundException(AccountsBaseException):
+    pass
+
+
+class PlaylistAlreadyExist(AccountsBaseException):
     pass

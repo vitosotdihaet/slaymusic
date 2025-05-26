@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alembic-migrate-job
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              check_service() {
+                name="$1"
+                host="$2"
+                port="$3"
+                echo -n "Waiting for $name..."
+                until nc -z "$host" "$port" 2>/dev/null; do
+                  sleep 0.25
+                done
+                echo " Done"
+              }
+
+              check_service "postgres-music-service" "postgres-music-service" "$MUSIC_PORT"
+
+              echo "All dependencies are up!"
+      containers:
+        - name: migration-container
+          image: slaymusic-alembic-job-image
+          command: ["alembic", "upgrade", "head"]
+          env:
+            - name: POSTGRES_USER
+              value: $MUSIC_ROOT_USER
+            - name: POSTGRES_PASSWORD
+              value: $MUSIC_ROOT_PASSWORD
+            - name: POSTGRES_DB
+              value: $MUSIC_DB
+      restartPolicy: OnFailure
+  backoffLimit: 5
