@@ -1,6 +1,10 @@
 import axios from 'axios';
 import router from '@/router';
 
+export function BackendURL(suff) {
+  return `${process.env.VUE_APP_BACKEND_URL}${suff}`;
+}
+
 const apiClient = axios.create({
   baseURL: process.env.VUE_APP_BACKEND_URL,
 });

@@ -51,9 +51,7 @@ const performSearch = async () => {
   if (!searchQuery.value.trim()) return;
   
   try {
-    // Здесь будет запрос к API
     console.log('Searching for:', searchQuery.value);
-    // Временные моковые данные
     results.value = [
       { id: 1, name: 'Song 1', artist: 'Artist 1' },
       { id: 2, name: 'Song 2', artist: 'Artist 2' }

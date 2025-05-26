@@ -41,7 +41,7 @@ export default {
   },
   methods: {
     async login(username, password) {
-      return apiClient.post('/accounts/login', {
+      return apiClient.post('/user/login', {
         username: username,
         password: password,
       });

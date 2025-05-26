@@ -22,8 +22,8 @@ const progressBarStyle = computed(() => {
             <div class="track-info">
                 <img class="cover-mini" src="slayrock.png" alt="Cover" />
                 <div class="text">
-                    <strong>SLAY ROCK</strong>
-                    <small>Eternxlkz</small>
+                    <strong>{{ player.title }}</strong>
+                    <small> {{player.author }}</small>
                 </div>
             </div>
 
@@ -46,7 +46,7 @@ const progressBarStyle = computed(() => {
                     <span :class="['icon', 'icon-like', { liked: player.isLiked }]"></span>
                 </button>
                 <button class="btn"><span class="icon icon-add"></span></button>
-                <button class="btn"><span class="icon icon-menu"></span></button>
+                <!-- <button class="btn"><span class="icon icon-menu"></span></button> -->
             </div>
         </div>
     </div>

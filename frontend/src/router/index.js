@@ -9,6 +9,7 @@ import Liked from '../components/Liked.vue'
 
 import { jwtDecode } from 'jwt-decode';
 import UploadTrack from '../components/UploadTrack.vue'
+import apiClient from '../api/axios'
 
 const routes = [
   {
@@ -92,6 +93,31 @@ export function isTokenValid(token) {
     console.log("token error", err);
     return false;
   }
+}
+
+export function getUserID(token) {
+  try {
+    const decoded = jwtDecode(token);
+    console.log("getUserID: success decode: ", decoded);
+    return decoded.id;
+  } catch (err) {
+    console.log("getUserID: token error", err);
+    return false;
+  }
+}
+
+export async function getArtistByID(artist_id) {
+  try {
+    const response = await apiClient.get("/user/artist/", {}, {
+      params: {
+        id: artist_id
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.log("artist error", error);
+  }
+  return {};
 }
 
 router.beforeEach((to, from, next) => {

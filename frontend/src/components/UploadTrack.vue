@@ -8,10 +8,10 @@
         <input v-model="trackData.name" type="text" required>
       </div>
       
-      <div class="form-group">
+      <!-- <div class="form-group">
         <label>Artist ID*</label>
         <input v-model.number="trackData.artist_id" type="number" required>
-      </div>
+      </div> -->
       
       <div class="form-group">
         <label>Genre ID</label>
@@ -46,10 +46,10 @@
 <script setup>
 import { ref } from 'vue';
 import apiClient from '@/api/axios';
+import { getUserID } from '../router';
 
 const trackData = ref({
   name: '',
-  artist_id: null,
   genre_id: null,
   release_date: new Date().toISOString().split('T')[0]
 });
@@ -76,23 +76,11 @@ const submitTrack = async () => {
   try {
     const formData = new FormData();
     formData.append('track_file', audioFile.value);
-
-    try{
-        console.log("ERASE AFTER REBASE uploadtrack");
-        const artist_respone = await apiClient.post('/artist/', {}, {
-        params: {
-            name : "name",
-        }
-    });
-    } catch(error){
-        console.log("artist error ", error);
-    }
-
-
+    var user_id = getUserID(localStorage.getItem("token")).id;
     const response = await apiClient.post('/track/single/', formData, {
       params: {
         name: trackData.value.name,
-        artist_id: trackData.value.artist_id,
+        artist_id: user_id,
         genre_id: trackData.value.genre_id || undefined,
         release_date: trackData.value.release_date
       },

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { BackendURL } from '../api/axios';
 
 export const usePlayerStore = defineStore('player', () => {
   const audio = new Audio();
@@ -11,6 +12,8 @@ export const usePlayerStore = defineStore('player', () => {
   const currentTime = ref(0);
   const duration = ref(1);
   const progress = ref(0);
+  const title = ref("SLAY ROCK22");
+  const author = ref("Eternxlkz");
 
   audio.src = '/bloodth.mp3';
   audio.preload = 'metadata';
@@ -24,6 +27,16 @@ export const usePlayerStore = defineStore('player', () => {
   audio.addEventListener('error', () => {
     console.error('Audio error', audio.error);
   });
+
+  function setTrack(track) {
+    title.value = track.name;
+    author.value = track.artist.name;
+    audio.src = BackendURL(track.audioUrl);
+    audio.play();
+    isPlaying.value = true;
+    console.log("set track", track);
+    console.log("audio", audio);
+  }
 
   function togglePlay() {
     if (audio.paused) {
@@ -48,6 +61,8 @@ export const usePlayerStore = defineStore('player', () => {
   const formattedTime = computed(() => formatTime(currentTime.value));
 
   return {
+    title,
+    author,
     isPlaying,
     isLiked,
     progress,
@@ -57,5 +72,6 @@ export const usePlayerStore = defineStore('player', () => {
     togglePlay,
     seekTo,
     audio,
+    setTrack,
   };
 });

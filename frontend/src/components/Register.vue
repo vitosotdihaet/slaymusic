@@ -47,7 +47,7 @@ export default {
   },
   methods: {
     async createUser(name, username, password) {
-      return apiClient.post('/accounts/register', {
+      return apiClient.post('/user/register', {
         name: name,
         username: username,
         password: password,
