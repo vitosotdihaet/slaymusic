@@ -135,6 +135,12 @@ class PlaylistSearchParams(AccountsSearchParams):
     author_id: int | None = None
 
 
+class PlaylistTrackSearchParams(BaseModel):
+    id: int
+    skip: int = Field(ge=0, default=0)
+    limit: int = Field(ge=1, default=100)
+
+
 class SubscribeSearchParams(BaseModel):
     id: int | None = None
     skip: int = Field(ge=0, default=0)

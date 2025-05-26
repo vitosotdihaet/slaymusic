@@ -149,6 +149,15 @@ class TestUserEndpoints:
             status.HTTP_404_NOT_FOUND,
         ], f"Failed to delete track {track_id}: {resp.status_code} - {resp.text}"
 
+    async def _add_track_to_playlist(
+        self, client: AsyncClient, playlist_id: int, track_id: int, headers: dict
+    ):
+        track_data = {"playlist_id": playlist_id, "track_id": track_id}
+        resp = await client.post("/playlist/track/", params=track_data, headers=headers)
+        assert resp.status_code == status.HTTP_201_CREATED, (
+            f"Failed to add track to playlist: {resp.text}"
+        )
+
     async def test_create_playlist_success(self, async_client: AsyncClient):
         author_id, headers = await self._create_user_and_get_auth_headers(
             async_client, "PlaylistAuthor"
@@ -360,4 +369,102 @@ class TestUserEndpoints:
 
         await self._delete_playlist(async_client, playlist_id, headers)
         await self._delete_track(async_client, track_id, headers)
+        await self._delete_user(async_client, headers)
+
+    async def test_get_tracks_by_playlist_success(self, async_client: AsyncClient):
+        author_id, headers = await self._create_user_and_get_auth_headers(
+            async_client, "TracksGetSuccessUser"
+        )
+        playlist_id = await self._create_playlist(
+            async_client, author_id, headers, "TracksGetSuccessPlaylist"
+        )
+        track1_id = await self._create_single(
+            async_client, author_id, headers, "Track1ForGet"
+        )
+        track2_id = await self._create_single(
+            async_client, author_id, headers, "Track2ForGet"
+        )
+
+        await self._add_track_to_playlist(async_client, playlist_id, track1_id, headers)
+        await self._add_track_to_playlist(async_client, playlist_id, track2_id, headers)
+
+        resp = await async_client.get(
+            "playlist/tracks/", params={"id": playlist_id}, headers=headers
+        )
+
+        assert resp.status_code == status.HTTP_200_OK
+        tracks = resp.json()
+        assert len(tracks) == 2
+        track_ids = {t["id"] for t in tracks}
+        assert track1_id in track_ids
+        assert track2_id in track_ids
+
+        await self._delete_playlist(async_client, playlist_id, headers)
+        await self._delete_track(async_client, track1_id, headers)
+        await self._delete_track(async_client, track2_id, headers)
+        await self._delete_user(async_client, headers)
+
+    async def test_get_tracks_by_playlist_with_pagination(
+        self, async_client: AsyncClient
+    ):
+        author_id, headers = await self._create_user_and_get_auth_headers(
+            async_client, "TracksGetPaginationUser"
+        )
+        playlist_id = await self._create_playlist(
+            async_client, author_id, headers, "TracksGetPaginationPlaylist"
+        )
+
+        track_ids = []
+        for i in range(5):
+            track_id = await self._create_single(
+                async_client, author_id, headers, f"Track{i + 1}ForPagination"
+            )
+            await self._add_track_to_playlist(
+                async_client, playlist_id, track_id, headers
+            )
+            track_ids.append(track_id)
+
+        resp_page1 = await async_client.get(
+            "playlist/tracks/",
+            params={"id": playlist_id, "limit": 2, "skip": 0},
+            headers=headers,
+        )
+        assert resp_page1.status_code == status.HTTP_200_OK
+        tracks_page1 = resp_page1.json()
+        assert len(tracks_page1) == 2
+        assert {t["id"] for t in tracks_page1} == {track_ids[0], track_ids[1]}
+
+        resp_page2 = await async_client.get(
+            "playlist/tracks/",
+            params={"id": playlist_id, "limit": 2, "skip": 1},
+            headers=headers,
+        )
+        assert resp_page2.status_code == status.HTTP_200_OK
+        tracks_page2 = resp_page2.json()
+        assert len(tracks_page2) == 2
+        assert {t["id"] for t in tracks_page2} == {track_ids[1], track_ids[2]}
+
+        await self._delete_playlist(async_client, playlist_id, headers)
+        for track_id in track_ids:
+            await self._delete_track(async_client, track_id, headers)
+        await self._delete_user(async_client, headers)
+
+    async def test_get_tracks_by_playlist_empty_playlist(
+        self, async_client: AsyncClient
+    ):
+        author_id, headers = await self._create_user_and_get_auth_headers(
+            async_client, "EmptyPlaylistUser"
+        )
+        playlist_id = await self._create_playlist(
+            async_client, author_id, headers, "EmptyPlaylist"
+        )
+
+        resp = await async_client.get(
+            "playlist/tracks/", params={"id": playlist_id}, headers=headers
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        tracks = resp.json()
+        assert len(tracks) == 0
+
+        await self._delete_playlist(async_client, playlist_id, headers)
         await self._delete_user(async_client, headers)

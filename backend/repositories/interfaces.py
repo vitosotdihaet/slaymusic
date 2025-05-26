@@ -45,6 +45,7 @@ from dto.accounts import (
     UpdatePlaylist,
     Subscribe,
     SubscribeSearchParams,
+    PlaylistTrackSearchParams,
 )
 
 from typing import AsyncIterator, Protocol, Optional
@@ -146,7 +147,9 @@ class IPlaylistRepository(Protocol):
     async def add_track_to_playlist(
         self, playlist_track: PlaylistTrack
     ) -> PlaylistTrack: ...
-    async def get_tracks_by_playlist(self, playlist: PlaylistID) -> list[Track]: ...
+    async def get_tracks_by_playlist(
+        self, params: PlaylistTrackSearchParams
+    ) -> list[Track]: ...
     async def remove_track_from_playlist(
         self, playlist_track: PlaylistTrack
     ) -> None: ...

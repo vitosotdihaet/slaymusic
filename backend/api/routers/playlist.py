@@ -16,6 +16,7 @@ from dto.accounts import (
     PlaylistTrack,
     UpdatePlaylist,
     UserMiddleware,
+    PlaylistTrackSearchParams,
 )
 from dto.music import Track
 from services.accounts import AccountService
@@ -198,12 +199,12 @@ async def add_track_to_playlist(
     "/tracks/",
     response_model=list[Track],
 )
-async def get_track_by_playlist(
-    playlist: PlaylistID = Depends(),
+async def get_tracks_by_playlist(
+    params: PlaylistTrackSearchParams = Depends(),
     accounts_service: AccountService = Depends(get_account_service),
 ):
     try:
-        return await accounts_service.get_tracks_by_playlist(playlist)
+        return await accounts_service.get_tracks_by_playlist(params)
     except (PlaylistNotFoundException,) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
