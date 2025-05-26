@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mongodb-daily-user-activity-pvc
+  name: mongodb-analytics-pvc
   annotations:
     tilt.dev/down-policy: keep
 spec:
@@ -14,27 +14,27 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongodb-daily-user-activity
+  name: mongodb-analytics
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mongodb-daily-user-activity
+      app: mongodb-analytics
   template:
     metadata:
       labels:
-        app: mongodb-daily-user-activity
+        app: mongodb-analytics
     spec:
       containers:
         - name: mongodb
           image: mongo:7
           env:
             - name: MONGO_INITDB_ROOT_USERNAME
-              value: $DAILY_USER_ACTIVITY_ROOT_USER
+              value: $ANALYTICS_ROOT_USER
             - name: MONGO_INITDB_ROOT_PASSWORD
-              value: $DAILY_USER_ACTIVITY_ROOT_PASSWORD
+              value: $ANALYTICS_ROOT_PASSWORD
             - name: $MONGO_INITDB_DATABASE
-              value: $DAILY_USER_ACTIVITY_ROOT_DB
+              value: $ANALYTICS_ROOT_DB
           ports:
             - containerPort: 27017
           volumeMounts:
@@ -67,18 +67,18 @@ spec:
       volumes:
         - name: mongodb-storage
           persistentVolumeClaim:
-            claimName: mongodb-daily-user-activity-pvc
+            claimName: mongodb-analytics-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb-daily-user-activity-service
+  name: mongodb-analytics-service
 spec:
   selector:
-    app: mongodb-daily-user-activity
+    app: mongodb-analytics
   ports:
     - protocol: TCP
       name: db
-      port: $DAILY_USER_ACTIVITY_PORT
+      port: $ANALYTICS_PORT
       targetPort: 27017
   type: NodePort
