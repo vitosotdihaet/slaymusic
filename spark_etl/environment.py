@@ -2,10 +2,10 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    ANALYTICS_ROOT_USER: str
-    ANALYTICS_ROOT_PASSWORD: str
-    ANALYTICS_DB: str
-    ANALYTICS_PORT: int
+    DWH_ROOT_USER: str
+    DWH_ROOT_PASSWORD: str
+    DWH_DB: str
+    DWH_PORT: int
 
     class Config:
         env_file = ".env"
