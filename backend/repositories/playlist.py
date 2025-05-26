@@ -5,7 +5,9 @@ from dto.accounts import (
     PlaylistSearchParams,
     PlaylistTrack,
     UpdatePlaylist,
+    PlaylistTrackSearchParams,
 )
+from dto.music import Track
 from repositories.interfaces import IPlaylistRepository
 from repositories.helpers import RepositoryHelpers
 from models.playlist import PlaylistModel
@@ -150,6 +152,27 @@ class SQLAlchemyPlaylistRepository(IPlaylistRepository, RepositoryHelpers):
             to_add = PlaylistTrackModel(**playlist_track.model_dump())
             added = await self._add_and_commit(to_add, session)
             return PlaylistTrack.model_validate(added, from_attributes=True)
+
+    async def get_tracks_by_playlist(
+        self, params: PlaylistTrackSearchParams
+    ) -> list[Track]:
+        async with self.session_factory() as session:
+            playlist_exists = await self._get_one_or_none(
+                select(PlaylistModel.id).where(PlaylistModel.id == params.id),
+                session,
+            )
+            if not playlist_exists:
+                raise PlaylistNotFoundException(f"Playlist '{params.id}' not found")
+
+            query = (
+                select(TrackModel)
+                .join(PlaylistTrackModel, PlaylistTrackModel.track_id == TrackModel.id)
+                .where(PlaylistTrackModel.playlist_id == params.id)
+                .offset(params.skip)
+                .limit(params.limit)
+            )
+            track_models = await self._get_all(query, session)
+            return [Track.model_validate(m, from_attributes=True) for m in track_models]
 
     async def remove_track_from_playlist(self, playlist_track: PlaylistTrack) -> None:
         async with self.session_factory() as session:

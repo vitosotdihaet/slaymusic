@@ -22,6 +22,7 @@ from dto.accounts import (
     SubscribeSearchParams,
     ArtistSearchParams,
     UpdateUserRole,
+    PlaylistTrackSearchParams,
 )
 from dto.music import AlbumSearchParams, TrackSearchParams, AlbumID, TrackID
 from repositories.interfaces import (
@@ -254,6 +255,9 @@ class AccountService:
         self, playlist_track: PlaylistTrack
     ) -> PlaylistTrack:
         return await self.playlist_repository.add_track_to_playlist(playlist_track)
+
+    async def get_tracks_by_playlist(self, params: PlaylistTrackSearchParams):
+        return await self.playlist_repository.get_tracks_by_playlist(params)
 
     async def remove_track_from_playlist(self, playlist_track: PlaylistTrack) -> None:
         await self.playlist_repository.remove_track_from_playlist(playlist_track)

@@ -16,7 +16,9 @@ from dto.accounts import (
     PlaylistTrack,
     UpdatePlaylist,
     UserMiddleware,
+    PlaylistTrackSearchParams,
 )
+from dto.music import Track
 from services.accounts import AccountService
 from configs.depends import (
     get_account_service,
@@ -191,6 +193,20 @@ async def add_track_to_playlist(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except PlaylistAlreadyExist as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get(
+    "/tracks/",
+    response_model=list[Track],
+)
+async def get_tracks_by_playlist(
+    params: PlaylistTrackSearchParams = Depends(),
+    accounts_service: AccountService = Depends(get_account_service),
+):
+    try:
+        return await accounts_service.get_tracks_by_playlist(params)
+    except (PlaylistNotFoundException,) as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete(
