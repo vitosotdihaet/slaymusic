@@ -46,6 +46,7 @@ spec:
                 - mongosh
                 - --eval
                 - "db.adminCommand('ping')"
+            initialDelaySeconds: 10
             periodSeconds: 60
             timeoutSeconds: 2
           readinessProbe:
@@ -54,7 +55,8 @@ spec:
                 - mongosh
                 - --eval
                 - "db.adminCommand('ping')"
-            periodSeconds: 60
+            initialDelaySeconds: 10
+            periodSeconds: 15
             timeoutSeconds: 2
           startupProbe:
             exec:
@@ -62,6 +64,7 @@ spec:
                 - mongosh
                 - --eval
                 - "db.adminCommand('ping')"
+            initialDelaySeconds: 10
             failureThreshold: 50
             periodSeconds: 3
       volumes:

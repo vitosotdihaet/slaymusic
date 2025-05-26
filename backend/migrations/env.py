@@ -6,7 +6,6 @@ from sqlalchemy import pool
 from alembic import context
 from configs.database import get_psql_url
 from models.base_model import MusicModelBase
-from models import album, genre, playlist, playlist_track, subscription, track, user
 
 config = context.config
 
