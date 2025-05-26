@@ -20,7 +20,6 @@ from dto.accounts import (
     UpdateUser,
     UpdatePlaylist,
     SubscribeSearchParams,
-    UserRole,
     ArtistSearchParams,
     UpdateUserRole,
 )
