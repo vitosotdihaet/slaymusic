@@ -68,3 +68,11 @@ docker_build(
             trigger='./backend/requirements.txt'),
     ]
 )
+
+docker_build(
+    'slaymusic-alembic-job-image',
+    '.',
+    dockerfile='./backend/dockerfile',
+    build_args={'BACKEND_PORT': env_vars['BACKEND_PORT']},
+    only=['backend', '.env']
+)

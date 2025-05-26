@@ -176,7 +176,7 @@ async def delete_image(
 async def add_track_to_playlist(
     playlist_track: PlaylistTrack = Depends(),
     accounts_service: AccountService = Depends(get_account_service),
-    user_data: UserMiddleware = Depends(
+    _: UserMiddleware = Depends(
         require_owner_or_admin(
             PlaylistTrack, "playlist_id", "get_playlist", get_account_service
         )
@@ -200,7 +200,7 @@ async def add_track_to_playlist(
 async def remove_track_from_playlist(
     playlist_track: PlaylistTrack = Depends(),
     accounts_service: AccountService = Depends(get_account_service),
-    user_data: UserMiddleware = Depends(
+    _: UserMiddleware = Depends(
         require_owner_or_admin(
             PlaylistTrack, "playlist_id", "get_playlist", get_account_service
         )

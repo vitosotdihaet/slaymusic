@@ -28,7 +28,7 @@ spec:
               echo "All dependencies are up!"
       containers:
         - name: migration-container
-          image: slaymusic-backend-image
+          image: slaymusic-alembic-job-image
           command: ["alembic", "upgrade", "head"]
           env:
             - name: POSTGRES_USER
