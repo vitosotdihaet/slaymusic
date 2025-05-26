@@ -121,6 +121,10 @@ header {
   margin-right: 2rem;
 }
 
+.logo:hover {
+  color: #ae0810;
+}
+
 .main-nav a {
   margin-right: 1.5rem;
   text-decoration: none;

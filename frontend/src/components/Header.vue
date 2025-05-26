@@ -1,9 +1,11 @@
 <template>
     <header>
         <div class="left-group">
-            <div class="logo">
-                <span class="icon icon-logo"></span>Slay
-            </div>
+            <router-link to="/" exact-active-class="active">
+                <div class="logo">
+                    <span class="icon icon-logo"></span>Slay
+                </div>
+            </router-link>
             <nav class="main-nav">
                 <router-link to="/" exact-active-class="active">
                     <span class="icon icon-home"></span>
@@ -24,13 +26,47 @@
             </nav>
         </div>
         <div class="right-group">
-            <router-link to="#search">
+            <button @click="openSearchModal" class="search-btn">
                 <span class="icon icon-search"></span>
-            </router-link>
+            </button>
         </div>
+        
+        <SearchModal 
+          :isOpen="isSearchModalOpen" 
+          @close="closeSearchModal" 
+        />
     </header>
 </template>
 
+<script setup>
+import { ref } from 'vue';
+import SearchModal from '@/components/SearchModal.vue';
+
+const isSearchModalOpen = ref(false);
+
+const openSearchModal = () => {
+  isSearchModalOpen.value = true;
+};
+
+const closeSearchModal = () => {
+  isSearchModalOpen.value = false;
+};
+</script>
+
 <style>
 @import '../assets/css/styles.css';
+a {
+  text-decoration: none;
+}
+.search-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.search-btn:hover {
+  opacity: 0.8;
+}
 </style>
