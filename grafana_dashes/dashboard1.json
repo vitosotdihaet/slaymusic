@@ -1,42 +1,4 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-datasource
-  labels:
-    grafana_datasource: "1"
-data:
-  prometheus.yaml: |
-    apiVersion: 1
-    datasources:
-      - name: Prometheus
-        type: prometheus
-        access: proxy
-        url: http://prometheus-service:$PROMETHEUS_PORT
-        isDefault: true
-        editable: true
-        uid: prometheus-ds
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-provisioning
-data:
-  # Конфигурация provisioning для дашбордов
-  dashboards.yaml: |
-    apiVersion: 1
-    providers:
-    - name: 'default'
-      orgId: 1
-      folder: ''
-      type: file
-      disableDeletion: false
-      editable: true
-      options:
-        path: /etc/grafana/provisioning/dashboards
-  
-  # Пример дашборда (замените содержимым своего dashboard1.json)
-  dashboard1.json: |-
-    {
+{
     "__inputs": [
       {
         "name": "DS_PROMETHEUS",
@@ -160,7 +122,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -196,7 +158,7 @@ data:
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus-ds"
+          "uid": "${DS_PROMETHEUS}"
         },
         "fieldConfig": {
           "defaults": {
@@ -243,7 +205,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -287,7 +249,7 @@ data:
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus-ds"
+          "uid": "${DS_PROMETHEUS}"
         },
         "fieldConfig": {
           "defaults": {
@@ -342,7 +304,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -359,7 +321,7 @@ data:
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus-ds"
+          "uid": "${DS_PROMETHEUS}"
         },
         "fieldConfig": {
           "defaults": {
@@ -412,7 +374,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -425,7 +387,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "disableTextWrap": false,
             "editorMode": "builder",
@@ -528,7 +490,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -541,7 +503,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "disableTextWrap": false,
             "editorMode": "builder",
@@ -562,7 +524,7 @@ data:
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus-ds"
+          "uid": "${DS_PROMETHEUS}"
         },
         "fieldConfig": {
           "defaults": {
@@ -643,7 +605,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -656,7 +618,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "disableTextWrap": false,
             "editorMode": "builder",
@@ -677,7 +639,7 @@ data:
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus-ds"
+          "uid": "${DS_PROMETHEUS}"
         },
         "fieldConfig": {
           "defaults": {
@@ -757,7 +719,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -774,7 +736,7 @@ data:
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus-ds"
+          "uid": "${DS_PROMETHEUS}"
         },
         "fieldConfig": {
           "defaults": {
@@ -853,7 +815,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -866,7 +828,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "disableTextWrap": false,
             "editorMode": "builder",
@@ -887,7 +849,7 @@ data:
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus-ds"
+          "uid": "${DS_PROMETHEUS}"
         },
         "fieldConfig": {
           "defaults": {
@@ -967,7 +929,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "prometheus-ds"
+              "uid": "${DS_PROMETHEUS}"
             },
             "editorMode": "code",
             "exemplar": true,
@@ -991,7 +953,7 @@ data:
           "current": {},
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus-ds"
+            "uid": "${DS_PROMETHEUS}"
           },
           "definition": "label_values(fastapi_app_info{}, app_name)",
           "hide": 0,
@@ -1043,62 +1005,4 @@ data:
     "uid": "fastapi-observability",
     "version": 2,
     "weekStart": ""
-    }
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: grafana
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: grafana
-  template:
-    metadata:
-      labels:
-        app: grafana
-    spec:
-      containers:
-        - name: grafana
-          image: grafana/grafana
-          ports:
-            - containerPort: 3000
-          env:
-          - name: GF_SECURITY_ADMIN_USER
-            value: $GRAFANA_ADMIN
-          - name: GF_SECURITY_ADMIN_PASSWORD
-            value: $GRAFANA_PASSWORD
-          - name: GF_PATHS_PROVISIONING
-            value: /etc/grafana/provisioning
-          volumeMounts:
-            - name: grafana-storage
-              mountPath: /var/lib/grafana
-            - name: grafana-datasource
-              mountPath: /etc/grafana/provisioning/datasources
-            - name: grafana-provisioning
-              mountPath: /etc/grafana/provisioning/dashboards
-      volumes:
-        - name: grafana-storage
-          emptyDir: {}
-        - name: grafana-datasource
-          configMap:
-            name: grafana-datasource
-        - name: grafana-dashboards
-          configMap:
-            name: grafana-dashboards
-        - name: grafana-provisioning
-          configMap:
-            name: grafana-provisioning
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: grafana-service
-spec:
-  type: NodePort
-  ports:
-    - port: $GRAFANA_PORT
-      targetPort: 3000
-  selector:
-    app: grafana
+  }
