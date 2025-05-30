@@ -12,12 +12,14 @@ for line in str(read_file('.env')).splitlines():
 
 yaml_files = [
     'k8s/backend.yaml',
-    'k8s/minio.yaml',
-    'k8s/psql-accounts.yaml',
+    'k8s/alembic-job.yaml',
     'k8s/psql-music.yaml',
+    'k8s/minio.yaml',
     'k8s/mongo-user-activity.yaml',
     'k8s/redis-track-queue.yaml',
     'k8s/redis-track-queue-config.yaml',
+    'k8s/mongo-dwh.yaml',
+    'k8s/cronjob-spark-etl.yaml'
 ]
 
 for file in yaml_files:
@@ -26,6 +28,19 @@ for file in yaml_files:
         yaml_content = yaml_content.replace('$%s' % key, value)
     k8s_yaml(blob(yaml_content))
 
+k8s_resource(
+    'alembic-migrate-job',
+    resource_deps=[
+        'postgres-music',
+    ],
+)
+k8s_resource(
+    'spark-etl',
+    resource_deps=[
+        'postgres-music',
+        'mongodb-user-activity'
+    ],
+)
 # Set up port forwarding
 k8s_resource(
     'slaymusic-backend',
@@ -34,10 +49,10 @@ k8s_resource(
     ],
     resource_deps=[
         'minio',
-        'postgres-accounts',
         'postgres-music',
         'mongodb-user-activity',
         'redis-track-queue',
+        'alembic-migrate-job'
     ]
 )
 
@@ -60,4 +75,19 @@ docker_build(
         run('cd /app && pip install -r requirements.txt',
             trigger='./backend/requirements.txt'),
     ]
+)
+
+docker_build(
+    'slaymusic-alembic-job-image',
+    '.',
+    dockerfile='./backend/dockerfile',
+    build_args={'BACKEND_PORT': env_vars['BACKEND_PORT']},
+    only=['backend', '.env']
+)
+
+docker_build(
+  'spark-etl',
+  '.',
+  dockerfile='./spark_etl/dockerfile',
+  only=['spark_etl', '.env']
 )

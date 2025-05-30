@@ -9,8 +9,12 @@ spec:
       backoffLimit: 1
       template:
         spec:
-            initContainers:
-            - name: wait-for-dependencies
+          volumes:
+            - name: ivy2-volume
+              emptyDir: {}
+
+          initContainers:
+            - name: wait-for-dependencies-and-create-ivy
               image: busybox:latest
               command:
                 - sh
@@ -26,37 +30,47 @@ spec:
                     done
                     echo " Done"
                   }
+
                   check_service "postgres-music-service" "postgres-music-service" "$MUSIC_PORT"
                   check_service "mongodb-user-activity-service" "mongodb-user-activity-service" "$USER_ACTIVITY_PORT"
-                  echo "All dependencies are up!
-            containers:
+                  check_service "mongodb-dwh-service" "mongodb-dwh-service" "$DWH_PORT"
+                  echo "All dependencies are up!"
+
+                  mkdir -p /home/spark/.ivy2/local
+                  chown -R spark:spark /home/spark/.ivy2
+                  echo "Created /home/spark/.ivy2/local and set ownership to spark:spark"
+
+              volumeMounts:
+                - name: ivy2-volume
+                  mountPath: /home/spark/.ivy2
+
+          containers:
             - name: spark-etl
               image: spark-etl
-              command: ["/opt/spark/bin/spark-submit"]
+              command:
+                - "/opt/bitnami/spark/bin/spark-submit"
               args:
                 - "--master"
                 - "local[*]"
                 - "--packages"
-                - "org.mongodb.spark:mongo-spark-connector_2.12:10.1.1,org.postgresql:postgresql:42.6.0"
+                - "org.mongodb.spark:mongo-spark-connector_2.12:10.5.0,org.postgresql:postgresql:42.6.0"
                 - "/app/spark_etl/etl_job.py"
               env:
+                - name: HOME
+                  value: "/home/spark"
                 - name: POSTGRES_PORT
-                  value: "${MUSIC_PORT}"
+                  value: "{$MUSIC_PORT}"
                 - name: POSTGRES_DB
-                  value: "${MUSIC_DB}"
+                  value: $MUSIC_DB
                 - name: POSTGRES_USER
-                  value: "${MUSIC_ROOT_USER}"
+                  value: $MUSIC_ROOT_USER
                 - name: POSTGRES_PASSWORD
-                  value: "${MUSIC_ROOT_PASSWORD}"
+                  value: $MUSIC_ROOT_PASSWORD
                 - name: MONGO_USERDB_URI
                   value: "mongodb://mongodb-user-activity:27017/user_activity"
-                - name: MONGO_ANALYTICS_URI
-                  value: "mongodb://mongodb-analytics:27017/dwh"
-              resources:
-                requests:
-                  memory: "512Mi"
-                  cpu: "250m"
-                limits:
-                  memory: "1Gi"
-                  cpu: "500m"
-            restartPolicy: OnFailure
+                - name: MONGO_DWH_URI
+                  value: "mongodb://mongodb-dwh:27017/dwh"
+              volumeMounts:
+                - name: ivy2-volume
+                  mountPath: /home/spark/.ivy2
+          restartPolicy: OnFailure
