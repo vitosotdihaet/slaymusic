@@ -1,13 +1,33 @@
 FROM bitnami/spark:latest
 
+USER root
+
+RUN groupadd -r spark || true && \
+    useradd -r -g spark -d /home/spark -s /bin/bash spark || true
+
+RUN mkdir -p /home/spark/.ivy2/local && \
+    chown -R spark:spark /home/spark
+
+ENV HOME=/home/spark
 
 WORKDIR /app
-COPY spark_etl/requirements.txt .
 
+COPY spark_etl/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-COPY spark_etl/ .
-COPY .env .
+
+COPY spark_etl/ /app/spark_etl
+
+COPY .env ./
 
 ADD https://jdbc.postgresql.org/download/postgresql-42.6.0.jar /opt/spark/jars/
 
-ENTRYPOINT ["/opt/spark/bin/spark-submit", "--master", "local[*]", "--packages", "org.mongodb.spark:mongo-spark-connector_2.12:10.1.1,org.postgresql:postgresql:42.6.0", "spark_etl/etl_job.py"]
+RUN chown -R spark:spark /app
+
+USER spark
+
+CMD [ \
+  "/opt/bitnami/spark/bin/spark-submit", \
+  "--master", "local[*]", \
+  "--packages", "org.mongodb.spark:mongo-spark-connector_2.12:10.5.0,org.postgresql:postgresql:42.6.0", \
+  "spark_etl/etl_job.py" \
+]

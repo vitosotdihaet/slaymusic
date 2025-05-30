@@ -1,1 +1,3 @@
 pyspark
+pydantic-settings
+pymongo
