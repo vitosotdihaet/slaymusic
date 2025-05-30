@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: alembic-migrate-job
+  name: setup-job
 spec:
   template:
     spec:
@@ -24,13 +24,20 @@ spec:
               }
 
               check_service "postgres-music-service" "postgres-music-service" "$MUSIC_PORT"
+              check_service "minio-service" "minio-service" "$MINIO_PORT"
 
               echo "All dependencies are up!"
       containers:
-        - name: migration-container
-          image: slaymusic-alembic-job-image
-          command: ["alembic", "upgrade", "head"]
+        - name: setup-container
+          image: slaymusic-setup-job-image
+          command: ["sh", "-c"]
+          args:
+            - |
+              alembic upgrade head && \
+              python /app/configs/db_setup.py
           env:
+            - name: PYTHONPATH
+              value: "/app"
             - name: POSTGRES_USER
               value: $MUSIC_ROOT_USER
             - name: POSTGRES_PASSWORD
