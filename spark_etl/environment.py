@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     DWH_ROOT_PASSWORD: str
     DWH_DB: str
     DWH_PORT: int
+    PROMETHEUS_PORT: int
+
+    GRAFANA_PORT: int
+    GRAFANA_ADMIN: str
+    GRAFANA_PASSWORD: str
 
     class Config:
         env_file = ".env"
