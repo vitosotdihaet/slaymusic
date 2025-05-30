@@ -34,7 +34,7 @@ spec:
           args:
             - |
               alembic upgrade head && \
-              python /app/configs/db_setup.py
+              python /app/setup/db_setup.py
           env:
             - name: PYTHONPATH
               value: "/app"
