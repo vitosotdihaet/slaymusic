@@ -8,21 +8,15 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from datetime import datetime, timedelta
-from pymongo import MongoClient
 
-# -------------------- Общие параметры --------------------
 
-# Вычисляем «вчера» (формат ISO)
 yesterday = (datetime.utcnow() - timedelta(days=1)).isoformat()
 
-# JDBC-драйвер
 driver = "org.postgresql.Driver"
 
-# Получаем один раз учётные данные и URL для доступа к PostgreSQL
 _creds_music = get_db_creds("music")
 _psql_url_music = get_psql_url("music")
 
-# Инициализируем SparkSession с подключениями к MongoDB и нужными библиотеками
 spark = (
     SparkSession.builder
     .appName("ETL_Mongo_Spark")
@@ -36,7 +30,6 @@ spark = (
     .getOrCreate()
 )
 
-# -------------------- Универсальные функции --------------------
 
 def read_table(spark_session, table_name: str):
     return (
