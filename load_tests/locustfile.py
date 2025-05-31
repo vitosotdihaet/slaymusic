@@ -86,9 +86,8 @@ class MusicServiceUser(HttpUser):
             "author_id": self.user_id,
             "name": playlist_name,
         }
-        files = {"image_file": ("", "", "")}  # Без изображения для простоты
+        files = {"image_file": ("", "", "")}
 
-        # Создание плейлиста
         with self.client.post(
             "/playlist/",
             params=playlist_data,
@@ -99,8 +98,7 @@ class MusicServiceUser(HttpUser):
         ) as response:
             if response.status_code == 201:
                 playlist_id = response.json()["id"]
-                response.success()  # Отметить успешное выполнение запроса
-                # Получение созданного плейлиста
+                response.success()
                 self.client.get(
                     "/playlist/",
                     params={"id": playlist_id},
@@ -114,30 +112,13 @@ class MusicServiceUser(HttpUser):
 
     @task(1)
     def get_tracks_by_playlist(self):
-        """
-        Симулирует получение треков из существующего плейлиста.
-        Для этого нам нужен реальный playlist_id. В данном примере мы берем
-        случайный ID, предполагая, что какие-то плейлисты уже существуют.
-        В реальном нагрузочном тестировании лучше иметь подготовленные тестовые данные.
-        """
-        # В идеале, мы должны были бы создать плейлист заранее или получить список
-        # существующих плейлистов, чтобы получить реальный ID.
-        # Для простоты, используем заглушку или случайный ID, который может существовать.
-        # Замените 1, 2, 3 на реальные ID плейлистов из вашей БД, если они есть.
-        # Или можно добавить логику, чтобы получить ID из ранее созданных плейлистов.
-        playlist_id = random.randint(
-            1, 100
-        )  # Предполагаем, что есть плейлисты с ID от 1 до 100
+        playlist_id = random.randint(1, 100)
         self.client.get(
             "/playlist/tracks/", params={"id": playlist_id}, headers=self.headers
         )
 
     @task(1)
     def register_new_user_and_login(self):
-        """
-        Симулирует регистрацию нового пользователя и последующий логин.
-        Эта задача полезна для тестирования масштабируемости процесса регистрации.
-        """
         username = f"dynamic_user_{uuid.uuid4().hex[:8]}"
         password = "dynamic_password"
         name = "Dynamic Test User"
@@ -148,7 +129,6 @@ class MusicServiceUser(HttpUser):
             "password": password,
         }
 
-        # Использование catch_response=True позволяет нам явно отмечать запрос как успешный или неуспешный
         with self.client.post(
             "/user/register/",
             params=register_data,
@@ -158,29 +138,24 @@ class MusicServiceUser(HttpUser):
             if response.status_code == 201:
                 response.success()
                 print(f"Dynamic user {username} registered successfully.")
-                # Попытка логина сразу после регистрации
                 login_data = {"username": username, "password": password}
                 self.client.post(
                     "/user/login/", params=login_data, name="/user/login_dynamic/"
                 )
             elif response.status_code == 409:
-                response.success()  # Считаем успешным, если пользователь уже существует
+                response.success()
                 print(f"Dynamic user {username} already exists.")
             else:
                 response.failure(
                     f"Failed to register dynamic user {username}: {response.status_code} - {response.text}"
                 )
 
-    # Вы можете добавить больше задач здесь, например:
     # @task(1)
     # def create_single_track(self):
-    #     """
-    #     Симулирует создание нового сингла.
-    #     """
     #     track_name = f"Locust Single {uuid.uuid4().hex[:6]}"
     #     track_data = {
     #         "name": track_name,
-    #         "artist_id": self.user_id, # Используем ID текущего пользователя как ID артиста
+    #         "artist_id": self.user_id,
     #         "release_date": "2024-01-01",
     #     }
     #     files = {
@@ -191,11 +166,7 @@ class MusicServiceUser(HttpUser):
 
     # @task(1)
     # def get_random_track(self):
-    #     """
-    #     Симулирует получение информации о случайном треке.
-    #     """
-    #     # Для этого нужна реальная база данных треков
-    #     track_id = random.randint(1, 1000) # Предполагаем, что есть треки с ID от 1 до 1000
+    #     track_id = random.randint(1, 1000)
     #     self.client.get(f"/track/", params={"id": track_id}, headers=self.headers)
 
 
