@@ -31,6 +31,7 @@ k8s_resource(
     resource_deps=[
         'minio',
         'postgres-music',
+        'redis-track-queue',
     ],
 )
 

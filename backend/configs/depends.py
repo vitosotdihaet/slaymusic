@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
     app.state.track_queue_repository = RedisTrackQueueRepository(
         get_redis_client_generator("track-queue"),
         settings.TRACK_QUEUE_TTL,
-        await get_scripts("track-queue"),
+        get_scripts(),
     )
 
     app.state.track_queue_service = TrackQueueService(app.state.track_queue_repository)

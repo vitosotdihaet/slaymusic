@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import (
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import Document, init_beanie
+import hashlib
 
 from configs.environment import settings
 
@@ -77,13 +78,23 @@ def get_redis_client_generator(
     return lambda: redis.asyncio.Redis.from_url(get_redis_url(db_name))
 
 
-async def get_scripts(db_name: str, scripts_dir: str = "scripts/") -> dict[str, str]:
-    sha1s = {}
+async def load_scripts(db_name: str, scripts_dir: str = "scripts/") -> None:
     async with get_redis_client_generator(db_name)() as client:
         for filename in os.listdir(scripts_dir):
-            script_name = os.path.splitext(filename)[0]
             filepath = os.path.join(scripts_dir, filename)
             with open(filepath, "r") as f:
                 lua_script_content = f.read()
-            sha1s[script_name] = await client.script_load(lua_script_content)
+            await client.script_load(lua_script_content)
+
+
+def get_scripts(scripts_dir: str = "scripts/") -> dict[str, str]:
+    sha1s = {}
+    for filename in os.listdir(scripts_dir):
+        script_name = os.path.splitext(filename)[0]
+        filepath = os.path.join(scripts_dir, filename)
+        with open(filepath, "r") as f:
+            lua_script_content = f.read()
+            sha1s[script_name] = hashlib.sha1(
+                lua_script_content.encode("utf-8")
+            ).hexdigest()
     return sha1s

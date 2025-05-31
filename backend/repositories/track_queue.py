@@ -17,11 +17,11 @@ class RedisTrackQueueRepository(ITrackQueueRepository):
         self,
         client_factory: Callable[[], redis.asyncio.client.Redis],
         ttl_sec: int,
-        sha1s: dict[str, str],
+        script_sha1s: dict[str, str],
     ) -> None:
         self.client_factory = client_factory
         self.ttl_sec = ttl_sec
-        self.script_sha1s = sha1s
+        self.script_sha1s = script_sha1s
 
     @staticmethod
     def _queue_key(user_id: int) -> str:
