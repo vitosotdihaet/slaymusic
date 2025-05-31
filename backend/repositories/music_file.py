@@ -11,30 +11,17 @@ from io import BytesIO
 class MinioMusicFileRepository(IMusicFileRepository):
     def __init__(
         self,
-        minio_client: Minio,
-        track_bucket: str,
-        image_bucket: str,
-    ):
-        self.minio_client = minio_client
-        self.track_bucket = track_bucket
-        self.image_bucket = image_bucket
-
-    @staticmethod
-    async def create(
         endpoint: str,
         access_key: str,
         secret_key: str,
         track_bucket: str,
         image_bucket: str,
-    ) -> "MinioMusicFileRepository":
-        client = Minio(
+    ):
+        self.minio_client = Minio(
             endpoint, access_key=access_key, secret_key=secret_key, secure=False
         )
-        if not await client.bucket_exists(track_bucket):  # TODO sometimes err
-            await client.make_bucket(track_bucket)
-        if not await client.bucket_exists(image_bucket):
-            await client.make_bucket(image_bucket)
-        return MinioMusicFileRepository(client, track_bucket, image_bucket)
+        self.track_bucket = track_bucket
+        self.image_bucket = image_bucket
 
     @staticmethod
     def _get_track_path(track: Track):

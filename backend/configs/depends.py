@@ -1,5 +1,9 @@
 from configs.environment import settings
-from configs.database import get_redis_client_generator, get_session_generator
+from configs.database import (
+    get_redis_client_generator,
+    get_session_generator,
+    get_scripts,
+)
 from dto.accounts import UserMiddleware, UserRole
 from services.music import MusicService
 from services.user_activity import UserActivityService
@@ -30,7 +34,7 @@ async def lifespan(app: FastAPI):
         app.state.user_activity_repository
     )
 
-    app.state.music_file_repository = await MinioMusicFileRepository.create(
+    app.state.music_file_repository = MinioMusicFileRepository(
         "minio-service:" + str(settings.MINIO_PORT),
         settings.MINIO_ROOT_USER,
         settings.MINIO_ROOT_PASSWORD,
@@ -66,8 +70,10 @@ async def lifespan(app: FastAPI):
         app.state.album_repository,
         app.state.track_repository,
     )
-    app.state.track_queue_repository = await RedisTrackQueueRepository.create(
-        get_redis_client_generator("track-queue"), settings.TRACK_QUEUE_TTL
+    app.state.track_queue_repository = RedisTrackQueueRepository(
+        get_redis_client_generator("track-queue"),
+        settings.TRACK_QUEUE_TTL,
+        get_scripts(),
     )
 
     app.state.track_queue_service = TrackQueueService(app.state.track_queue_repository)

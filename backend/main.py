@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from configs.depends import lifespan
-from configs.logging import logger
+from configs.logger import logger
 from configs.environment import settings
 from api.routers import album, track, genre
 from api.routers import user_activity

@@ -7,10 +7,12 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncEngine,
 )
-
-from configs.environment import settings
+import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import Document, init_beanie
+import hashlib
+
+from configs.environment import settings
 
 
 DBS = ["music"]
@@ -76,9 +78,14 @@ def get_redis_client_generator(
     return lambda: redis.asyncio.Redis.from_url(get_redis_url(db_name))
 
 
-async def ensure_scripts(db_name: str, scripts: dict[str, str]) -> dict[str, str]:
+def get_scripts(scripts_dir: str = "scripts/") -> dict[str, str]:
     sha1s = {}
-    async with get_redis_client_generator(db_name)() as client:
-        for k, v in scripts.items():
-            sha1s[k] = await client.script_load(v)
+    for filename in os.listdir(scripts_dir):
+        script_name = os.path.splitext(filename)[0]
+        filepath = os.path.join(scripts_dir, filename)
+        with open(filepath, "r") as f:
+            lua_script_content = f.read()
+            sha1s[script_name] = hashlib.sha1(
+                lua_script_content.encode("utf-8")
+            ).hexdigest()
     return sha1s

@@ -1,6 +1,5 @@
 from typing import Callable
 import redis.asyncio.client
-from configs.database import ensure_scripts
 from exceptions.track_queue import TrackQueueNotFoundException
 from dto.track_queue import (
     InQueueID,
@@ -13,91 +12,6 @@ from dto.music import TrackID
 from repositories.interfaces import ITrackQueueRepository
 
 
-scripts = {
-    "insert": """
--- KEYS[1]: queue key
--- ARGV[1]: track ID
--- ARGV[2]: position (0-based)
--- ARGV[3]: TTL seconds
-
-local key = KEYS[1]
-local value = ARGV[1]
-local pos = tonumber(ARGV[2]) + 1
-local ttl = tonumber(ARGV[3])
-
-local len = redis.call('LLEN', key)
-if len == 0 then return redis.error_reply("e") end
-if pos > len then pos = len + 1 end
-
-local elements = redis.call('LRANGE', key, 0, -1)
-table.insert(elements, pos, value)
-
-redis.call('DEL', key)
-
-if #elements > 0 then
-    redis.call('RPUSH', key, unpack(elements))
-end
-
-redis.call('EXPIRE', key, ttl)
-return 'OK'
-""",
-    "move": """
--- KEYS[1]: queue key
--- ARGV[1]: source position (0-based)
--- ARGV[2]: dest position (0-based)
--- ARGV[3]: TTL seconds
-
-local key = KEYS[1]
-local src = tonumber(ARGV[1]) + 1
-local dest = tonumber(ARGV[2]) + 1
-local ttl = tonumber(ARGV[3])
-
-local len = redis.call('LLEN', key)
-if len == 0 then return redis.error_reply("e") end
-if src > len then src = len end
-if dest >= len then dest = len + 1 end
-
-local elements = redis.call('LRANGE', key, 0, -1)
-local elem = table.remove(elements, src)  -- Remove from source
-
--- Adjust destination after removal
-if dest > src then dest = dest - 1 end
-
-table.insert(elements, dest, elem)  -- Insert at destination
-redis.call('DEL', key)
-if #elements > 0 then
-    redis.call('RPUSH', key, unpack(elements))
-end
-
-redis.call('EXPIRE', key, ttl)
-return 'OK'
-""",
-    "remove": """
--- KEYS[1]: queue key
--- ARGV[1]: position (0-based)
--- ARGV[2]: TTL seconds
-
-local key = KEYS[1]
-local pos = tonumber(ARGV[1]) + 1
-local ttl = tonumber(ARGV[2])
-
-local len = redis.call('LLEN', key)
-if len == 0 then return redis.error_reply("e") end
-if pos > len then pos = len end
-
-local elements = redis.call('LRANGE', key, 0, -1)
-table.remove(elements, pos)
-redis.call('DEL', key)
-if #elements > 0 then
-    redis.call('RPUSH', key, unpack(elements))
-end
-
-redis.call('EXPIRE', key, ttl)
-return 'OK'
-""",
-}
-
-
 class RedisTrackQueueRepository(ITrackQueueRepository):
     def __init__(
         self,
@@ -108,14 +22,6 @@ class RedisTrackQueueRepository(ITrackQueueRepository):
         self.client_factory = client_factory
         self.ttl_sec = ttl_sec
         self.script_sha1s = script_sha1s
-
-    @staticmethod
-    async def create(
-        client_factory: Callable[[], redis.asyncio.client.Redis], ttl_sec: int
-    ) -> "RedisTrackQueueRepository":
-        return RedisTrackQueueRepository(
-            client_factory, ttl_sec, await ensure_scripts("track-queue", scripts)
-        )
 
     @staticmethod
     def _queue_key(user_id: int) -> str:
