@@ -1,8 +1,18 @@
 import asyncio
 from miniopy_async import Minio
+import os
 
-from configs.database import load_scripts
+from configs.database import get_redis_client_generator
 from configs.environment import settings
+
+
+async def load_scripts(db_name: str, scripts_dir: str = "scripts/") -> None:
+    async with get_redis_client_generator(db_name)() as client:
+        for filename in os.listdir(scripts_dir):
+            filepath = os.path.join(scripts_dir, filename)
+            with open(filepath, "r") as f:
+                lua_script_content = f.read()
+            await client.script_load(lua_script_content)
 
 
 async def setup():
