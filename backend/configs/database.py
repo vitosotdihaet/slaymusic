@@ -48,7 +48,12 @@ def get_redis_url(db_name: str) -> str:
 
 engines: dict[str, AsyncEngine] = {
     name: create_async_engine(
-        get_psql_url(name), future=True, isolation_level="READ COMMITTED"
+        get_psql_url(name),
+        future=True,
+        isolation_level="READ COMMITTED",
+        pool_size=20,
+        max_overflow=30,
+        pool_timeout=60,
     )
     for name in DBS
 }

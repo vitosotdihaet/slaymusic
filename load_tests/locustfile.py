@@ -1,20 +1,22 @@
 import random
 import uuid
 from locust import HttpUser, task, between, events
+import requests
+from fastapi import status
+from dotenv import load_dotenv
+import os
 
+assert load_dotenv(".env", override=True)
+
+base_url = f"http://localhost:{os.getenv('BACKEND_PORT', default='8000')}"
 
 USER_CREDENTIALS = {}
-
-
-@events.init.add_listener
-def _(environment, **kw):
-    print("Locust test environment initialized.")
 
 
 class MusicServiceUser(HttpUser):
     wait_time = between(1, 3)
 
-    host = "http://localhost:8000"
+    host = base_url
 
     def on_start(self):
         self.client.headers = {}
@@ -34,17 +36,14 @@ class MusicServiceUser(HttpUser):
         )
 
         if resp.status_code == 201:
-            print(f"User {username} registered successfully.")
             token = resp.json()["token"]
         elif resp.status_code == 400:
-            print(f"User {username} already exists, attempting to log in.")
             login_data = {"username": username, "password": password}
             resp = self.client.post(
                 "/user/login/", params=login_data, name="/user/login/"
             )
             if resp.status_code == 200:
                 token = resp.json()["token"]
-                print(f"User {username} logged in successfully.")
             else:
                 self.environment.runner.quit()
                 raise Exception(
@@ -63,14 +62,7 @@ class MusicServiceUser(HttpUser):
         resp = self.client.get(
             "/user/", headers=self.headers, name="/user/get_current/"
         )
-        if resp.status_code == 200:
-            self.user_id = resp.json()["id"]
-            print(f"User {self.username} (ID: {self.user_id}) initialized.")
-        else:
-            self.environment.runner.quit()
-            raise Exception(
-                f"Failed to get user ID for {self.username}: {resp.status_code} - {resp.text}"
-            )
+        self.user_id = resp.json()["id"]
 
         global USER_CREDENTIALS
         USER_CREDENTIALS[self.username] = {"token": token, "user_id": self.user_id}
@@ -81,17 +73,15 @@ class MusicServiceUser(HttpUser):
 
     @task(2)
     def create_and_get_playlist(self):
-        playlist_name = f"Locust Playlist {uuid.uuid4().hex[:6]}"
+        playlist_name = "Locust Playlist"
         playlist_data = {
             "author_id": self.user_id,
             "name": playlist_name,
         }
-        files = {"image_file": ("", "", "")}
 
         with self.client.post(
             "/playlist/",
             params=playlist_data,
-            files=files,
             headers=self.headers,
             catch_response=True,
             name="/playlist/create/",
@@ -110,45 +100,45 @@ class MusicServiceUser(HttpUser):
                     f"Failed to create playlist: {response.status_code} - {response.text}"
                 )
 
-    @task(1)
-    def get_tracks_by_playlist(self):
-        playlist_id = random.randint(1, 100)
-        self.client.get(
-            "/playlist/tracks/", params={"id": playlist_id}, headers=self.headers
-        )
+    # @task(1)
+    # def get_tracks_by_playlist(self):
+    #     playlist_id = random.randint(1, 100)
+    #     self.client.get(
+    #         "/playlist/tracks/", params={"id": playlist_id}, headers=self.headers
+    #     )
 
-    @task(1)
-    def register_new_user_and_login(self):
-        username = f"dynamic_user_{uuid.uuid4().hex[:8]}"
-        password = "dynamic_password"
-        name = "Dynamic Test User"
+    # @task(1)
+    # def register_new_user_and_login(self):
+    #     username = f"dynamic_user_{uuid.uuid4().hex[:8]}"
+    #     password = "dynamic_password"
+    #     name = "Dynamic Test User"
 
-        register_data = {
-            "name": name,
-            "username": username,
-            "password": password,
-        }
+    #     register_data = {
+    #         "name": name,
+    #         "username": username,
+    #         "password": password,
+    #     }
 
-        with self.client.post(
-            "/user/register/",
-            params=register_data,
-            catch_response=True,
-            name="/user/register_dynamic/",
-        ) as response:
-            if response.status_code == 201:
-                response.success()
-                print(f"Dynamic user {username} registered successfully.")
-                login_data = {"username": username, "password": password}
-                self.client.post(
-                    "/user/login/", params=login_data, name="/user/login_dynamic/"
-                )
-            elif response.status_code == 409:
-                response.success()
-                print(f"Dynamic user {username} already exists.")
-            else:
-                response.failure(
-                    f"Failed to register dynamic user {username}: {response.status_code} - {response.text}"
-                )
+    #     with self.client.post(
+    #         "/user/register/",
+    #         params=register_data,
+    #         catch_response=True,
+    #         name="/user/register_dynamic/",
+    #     ) as response:
+    #         if response.status_code == 201:
+    #             response.success()
+    #             print(f"Dynamic user {username} registered successfully.")
+    #             login_data = {"username": username, "password": password}
+    #             self.client.post(
+    #                 "/user/login/", params=login_data, name="/user/login_dynamic/"
+    #             )
+    #         elif response.status_code == 409:
+    #             response.success()
+    #             print(f"Dynamic user {username} already exists.")
+    #         else:
+    #             response.failure(
+    #                 f"Failed to register dynamic user {username}: {response.status_code} - {response.text}"
+    #             )
 
     # @task(1)
     # def create_single_track(self):
@@ -172,12 +162,12 @@ class MusicServiceUser(HttpUser):
 
 @events.test_stop.add_listener
 def _(environment, **kw):
-    print("\nLocust test finished. Performing cleanup (if any)...")
-    for username, data in USER_CREDENTIALS.items():
-        try:
-            # requests.delete(f"http://localhost:8000/user/", headers={"Authorization": f"Bearer {data['token']}"})
-            print(f"Would delete user: {username} (ID: {data['user_id']})")
-        except Exception as e:
-            print(f"Failed to delete user {username}: {e}")
+    print("\nLocust test finished. Performing cleanup...")
+    for _, data in USER_CREDENTIALS.items():
+        host = base_url
+        delete_url = f"{host}/user/"
+        headers = {"Authorization": f"Bearer {data['token']}"}
+
+        requests.delete(delete_url, headers=headers)
     USER_CREDENTIALS.clear()
-    pass
+    print("Cleanup complete.")

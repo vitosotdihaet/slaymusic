@@ -32,6 +32,8 @@ from repositories.interfaces import (
     IAlbumRepository,
     ITrackRepository,
 )
+
+from starlette.concurrency import run_in_threadpool
 from exceptions.music import ImageFileNotFoundException
 from typing import Optional
 from configs import environment as env
@@ -67,7 +69,7 @@ class AccountService:
         image_data: bytes | None = None,
         image_content_type: str | None = None,
     ) -> User:
-        hashed_password = self.get_hashed_password(new_user.password)
+        hashed_password = await self.get_hashed_password(new_user.password)
         user_with_hashed = new_user.model_copy(update={"password": hashed_password})
         user = await self.user_repository.create_user(user_with_hashed)
         if image_content_type:
@@ -174,11 +176,15 @@ class AccountService:
         except JWTError:
             return None
 
-    def verify_password(self, entered_password: str, hashed_password: str) -> bool:
-        return self.pwd_context.verify(entered_password, hashed_password)
+    async def verify_password(
+        self, entered_password: str, hashed_password: str
+    ) -> bool:
+        return await run_in_threadpool(
+            self.pwd_context.verify, entered_password, hashed_password
+        )
 
-    def get_hashed_password(self, entered_password: str) -> str:
-        return self.pwd_context.hash(entered_password)
+    async def get_hashed_password(self, entered_password: str) -> str:
+        return await run_in_threadpool(self.pwd_context.hash, entered_password)
 
     # === Subscription-related methods ===
 
