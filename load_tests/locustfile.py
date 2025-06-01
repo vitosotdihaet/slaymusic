@@ -121,21 +121,45 @@ class MusicServiceUser(HttpUser):
             name="/album/",
         )
 
-    @task(10)
+    @task(5)
     def get_tracks(self):
         self.client.get("/tracks/", name="/tracks/")
 
-    @task(10)
+    @task(5)
     def get_albums(self):
         self.client.get("/albums/", name="/albums")
 
-    @task(10)
+    @task(5)
     def get_playlists(self):
         self.client.get("/playlists/", name="/playlists/")
 
-    @task(10)
+    @task(5)
     def get_artists(self):
         self.client.get("/users/artist/", name="/users/artist/")
+
+    @task(5)
+    def get_tracks_with_params(self):
+        name = random.choice(["Loc", "ust", "icu", "loc", "usT", "1ocu"])
+        search_params = {"name": name}
+        self.client.get("/tracks/", params=search_params, name="/tracks/")
+
+    @task(5)
+    def get_albums_with_params(self):
+        name = random.choice(["Loc", "ust", "icu", "loc", "usT", "1ocu"])
+        search_params = {"name": name}
+        self.client.get("/albums/", params=search_params, name="/albums")
+
+    @task(5)
+    def get_playlists_with_params(self):
+        name = random.choice(["Loc", "ust", "icu", "loc", "usT", "1ocu"])
+        search_params = {"name": name}
+        self.client.get("/playlists/", params=search_params, name="/playlists/")
+
+    @task(5)
+    def get_artists_with_params(self):
+        name = random.choice(["Loc", "ust", "icu", "loc", "usT", "1ocu"])
+        search_params = {"name": name}
+        self.client.get("/users/artist/", params=search_params, name="/users/artist/")
 
     @task(30)
     def get_track(self):
