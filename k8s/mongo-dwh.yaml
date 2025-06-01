@@ -33,7 +33,7 @@ spec:
               value: $DWH_ROOT_USER
             - name: MONGO_INITDB_ROOT_PASSWORD
               value: $DWH_ROOT_PASSWORD
-            - name: $MONGO_INITDB_DATABASE
+            - name: MONGO_INITDB_DATABASE
               value: $DWH_ROOT_DB
           ports:
             - containerPort: 27017

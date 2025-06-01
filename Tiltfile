@@ -19,7 +19,9 @@ yaml_files = [
     'k8s/redis-track-queue.yaml',
     'k8s/redis-track-queue-config.yaml',
     'k8s/mongo-dwh.yaml',
-    'k8s/cronjob-spark-etl.yaml'
+    'k8s/cronjob-spark-etl.yaml',
+    'k8s/prometheus.yaml',
+    'k8s/grafana.yaml',
 ]
 
 for file in yaml_files:
@@ -38,8 +40,24 @@ k8s_resource(
     'spark-etl',
     resource_deps=[
         'postgres-music',
-        'mongodb-user-activity'
+        'mongodb-user-activity',
+        "mongodb-dwh"
     ],
+    pod_readiness="ignore"
+)
+
+k8s_resource(
+    'prometheus',
+    port_forwards=[
+        env_vars['PROMETHEUS_PORT']
+    ], resource_deps=[]
+)
+
+k8s_resource(
+    'grafana',
+    port_forwards=[
+        env_vars['GRAFANA_PORT']
+    ], resource_deps=['prometheus']
 )
 # Set up port forwarding
 k8s_resource(
@@ -76,15 +94,13 @@ docker_build(
             trigger='./backend/requirements.txt'),
     ]
 )
-
 docker_build(
-    'slaymusic-alembic-job-image',
+    'slaymusic-setup-job-image',
     '.',
     dockerfile='./backend/dockerfile',
     build_args={'BACKEND_PORT': env_vars['BACKEND_PORT']},
     only=['backend', '.env']
 )
-
 docker_build(
   'spark-etl',
   '.',

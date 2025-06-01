@@ -15,6 +15,19 @@ data:
         isDefault: true
         editable: true
         uid: prometheus-ds
+  mongodb-dwh.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: MongoDB
+        type: haohanyang-mongodb-datasource
+        access: proxy
+        url: ""
+        jsonData:
+          uri: "mongodb://$DWH_ROOT_USER:$DWH_ROOT_PASSWORD@mongodb-dwh:27017/db"
+          authSource: "admin"
+          tlsSkipVerify: true
+        secureJsonData:
+          connectionString: "mongodb://$DWH_ROOT_USER:$DWH_ROOT_PASSWORD@mongodb-dwh:27017/db"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -753,6 +766,285 @@ data:
     "timezone": "",
     "uid": "fastapi-observability",
     }
+  dashboard_analytics.json: |-
+    {
+      "id": null,
+      "uid": "analytics-mongo",
+      "title": "Analytics (MongoDB)",
+      "schemaVersion": 27,
+      "version": 1,
+      "refresh": "5m",
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "User Stats: Прослушивания vs Пропуски",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "user_stats",
+              "isPipeline": true,
+              "pipeline": "[{\"$group\":{\"_id\":{\"$dateToString\":{\"format\":\"%Y-%m-%d\",\"date\":\"$timestamp\"}},\"value\":{\"$sum\":\"$tracks_listened\"}}},{\"$sort\":{\"_id\":1}}]",
+              "format": "time_series"
+            },
+            {
+              "refId": "B",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "user_stats",
+              "isPipeline": true,
+              "pipeline": "[{\"$group\":{\"_id\":{\"$dateToString\":{\"format\":\"%Y-%m-%d\",\"date\":\"$timestamp\"}},\"value\":{\"$sum\":\"$tracks_skipped\"}}},{\"$sort\":{\"_id\":1}}]",
+              "format": "time_series"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0,
+              "color": { "mode": "palette-classic" }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "type": "barchart",
+          "title": "Top 10 Played Tracks (7 дней)",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "top_played_tracks",
+              "isPipeline": true,
+              "pipeline": "[{\"$match\":{\"timestamp\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",604800000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"totalPlays\":{\"$sum\":\"$play_count\"}}},{\"$sort\":{\"totalPlays\":-1}},{\"$limit\":10}]",
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          }
+        },
+        {
+          "type": "barchart",
+          "title": "Top 10 Skipped Tracks (7 дней)",
+          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "top_skipped_tracks",
+              "isPipeline": true,
+              "pipeline": "[{\"$match\":{\"timestamp\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",604800000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"totalSkips\":{\"$sum\":\"$skip_count\"}}},{\"$sort\":{\"totalSkips\":-1}},{\"$limit\":10}]",
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          }
+        },
+        {
+          "type": "heatmap",
+          "title": "Top Genres per Day (30 дней)",
+          "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "top_genres_day",
+              "isPipeline": true,
+              "pipeline": "[{\"$match\":{\"date\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",2592000000]}}}}},{\"$group\":{\"_id\":{\"genre\":\"$genre_id\",\"day\":\"$date\"},\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"_id.day\":1}}]",
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0,
+              "color": { "mode": "spectrum" }
+            },
+            "overrides": []
+          },
+          "options": {
+            "XBucketSize": null,
+            "showYAxis": true,
+            "showXAxis": true,
+            "showLegend": true
+          }
+        },
+        {
+          "type": "barchart",
+          "title": "Top 10 Genres (7 дней)",
+          "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "top_genres_week",
+              "isPipeline": true,
+              "pipeline": "[{\"$match\":{\"week\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",604800000]}}}}},{\"$group\":{\"_id\":\"$genre_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          }
+        },
+        {
+          "type": "barchart",
+          "title": "Top 10 Genres (30 дней)",
+          "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "top_genres_month",
+              "isPipeline": true,
+              "pipeline": "[{\"$match\":{\"month\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",2592000000]}}}}},{\"$group\":{\"_id\":\"$genre_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          }
+        },
+        {
+          "type": "barchart",
+          "title": "Top 10 Tracks (30 дней)",
+          "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "top_tracks_day",
+              "isPipeline": true,
+              "pipeline": "[{\"$match\":{\"date\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",2592000000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          }
+        },
+        {
+          "type": "barchart",
+          "title": "Top 10 Tracks (7 дней)",
+          "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "top_tracks_week",
+              "isPipeline": true,
+              "pipeline": "[{\"$match\":{\"week\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",604800000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          }
+        },
+        {
+          "type": "barchart",
+          "title": "Top 10 Tracks (30 дней)",
+          "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+              "database": "db",
+              "collection": "top_tracks_month",
+              "isPipeline": true,
+              "pipeline": "[{\"$match\":{\"month\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",2592000000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
+              "format": "table"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          }
+        }
+      ]
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -768,12 +1060,24 @@ spec:
       labels:
         app: grafana
     spec:
+      terminationGracePeriodSeconds: 60
       containers:
         - name: grafana
-          image: grafana/grafana
+          image: grafana/grafana:latest
           ports:
             - containerPort: 3000
+          command:
+            - sh
+            - -c
+            - |
+              apt-get install -y wget
+              ls
+              wget -O plugin.zip https://github.com/haohanyang/mongodb-datasource/releases/download/v0.3.2/haohanyang-mongodb-datasource-0.3.2.zip
+              unzip plugin.zip
+              find /haohanyang-mongodb-datasource -type f -name "gpx_mongodb_datasource_*" -exec chmod +x {} \;
           env:
+          - name: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
+            value: "haohanyang-mongodb-datasource"
           - name: GF_SECURITY_ADMIN_USER
             value: $GRAFANA_ADMIN
           - name: GF_SECURITY_ADMIN_PASSWORD
@@ -781,6 +1085,8 @@ spec:
           - name: GF_PATHS_PROVISIONING
             value: /etc/grafana/provisioning
           volumeMounts:
+            - name: grafana-plugins
+              mountPath: /var/lib/grafana/plugins
             - name: grafana-storage
               mountPath: /var/lib/grafana
             - name: grafana-datasource
@@ -788,6 +1094,8 @@ spec:
             - name: grafana-provisioning
               mountPath: /etc/grafana/provisioning/dashboards
       volumes:
+        - name: grafana-plugins
+          emptyDir: {}
         - name: grafana-storage
           emptyDir: {}
         - name: grafana-datasource
