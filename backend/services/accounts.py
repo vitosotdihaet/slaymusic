@@ -1,6 +1,3 @@
-from datetime import datetime, timedelta
-from jose import jwt, JWTError
-from passlib.context import CryptContext
 from dto.accounts import (
     User,
     UserID,
@@ -32,9 +29,13 @@ from repositories.interfaces import (
     IAlbumRepository,
     ITrackRepository,
 )
-
-from starlette.concurrency import run_in_threadpool
 from exceptions.music import ImageFileNotFoundException
+from exceptions.accounts import PlaylistFavDeletion
+
+from datetime import datetime, timedelta
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+from starlette.concurrency import run_in_threadpool
 from typing import Optional
 from configs import environment as env
 
@@ -125,7 +126,13 @@ class AccountService:
             PlaylistSearchParams(author_id=user_id.id, limit=10000)
         )
         for playlist in playlists:
-            await self.delete_playlist(PlaylistID(id=playlist.id))
+            await self.playlist_repository.delete_playlist(PlaylistID(id=playlist.id))
+            try:
+                await self.music_file_repository.delete_image(
+                    PlaylistID(id=playlist.id)
+                )
+            except ImageFileNotFoundException:
+                pass
 
         albums = await self.album_repository.get_albums(
             AlbumSearchParams(artist_id=user_id.id, limit=10000)
@@ -245,6 +252,9 @@ class AccountService:
         )
 
     async def delete_playlist(self, playlist_id: PlaylistID) -> None:
+        playlist = await self.playlist_repository.get_playlist_by_id(playlist_id)
+        if playlist.name == "fav":
+            raise PlaylistFavDeletion("Deletion of favorite playlist")
         await self.playlist_repository.delete_playlist(playlist_id)
         try:
             await self.music_file_repository.delete_image(playlist_id)
