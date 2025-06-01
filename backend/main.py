@@ -11,9 +11,6 @@ from api.routers import misc
 from api.routers import track_queue
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from prometheus_fastapi_instrumentator import Instrumentator
-
-
 app = FastAPI(lifespan=lifespan)
 
 logger.info("settings are: %s", settings)
