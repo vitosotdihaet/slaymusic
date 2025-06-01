@@ -12,7 +12,7 @@ for line in str(read_file('.env')).splitlines():
 
 yaml_files = [
     'k8s/backend.yaml',
-    'k8s/alembic-job.yaml',
+    'k8s/setup-job.yaml',
     'k8s/psql-music.yaml',
     'k8s/minio.yaml',
     'k8s/mongo-user-activity.yaml',
@@ -30,12 +30,6 @@ for file in yaml_files:
         yaml_content = yaml_content.replace('$%s' % key, value)
     k8s_yaml(blob(yaml_content))
 
-k8s_resource(
-    'alembic-migrate-job',
-    resource_deps=[
-        'postgres-music',
-    ],
-)
 k8s_resource(
     'spark-etl',
     resource_deps=[
@@ -70,7 +64,7 @@ k8s_resource(
         'postgres-music',
         'mongodb-user-activity',
         'redis-track-queue',
-        'alembic-migrate-job'
+        'setup-job',
     ]
 )
 
@@ -101,6 +95,7 @@ docker_build(
     build_args={'BACKEND_PORT': env_vars['BACKEND_PORT']},
     only=['backend', '.env']
 )
+
 docker_build(
   'spark-etl',
   '.',
