@@ -1,278 +1,154 @@
 {
   "id": null,
-  "uid": "analytics-mongo",
-  "title": "Analytics (MongoDB)",
-  "schemaVersion": 27,
+  "uid": "music-analytics-dashboard",
+  "title": "Music Analytics Dashboard",
+  "timezone": "browser",
+  "schemaVersion": 36,
   "version": 1,
-  "refresh": "5m",
+  "refresh": "10s",
   "panels": [
     {
-      "type": "timeseries",
-      "title": "User Stats: Прослушивания vs Пропуски",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
-      "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+      "type": "table",
+      "title": "Top Played Tracks",
+      "datasource": "MongoDB",
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
-          "collection": "user_stats",
-          "isPipeline": true,
-          "pipeline": "[{\"$group\":{\"_id\":{\"$dateToString\":{\"format\":\"%Y-%m-%d\",\"date\":\"$timestamp\"}},\"value\":{\"$sum\":\"$tracks_listened\"}}},{\"$sort\":{\"_id\":1}}]",
-          "format": "time_series"
-        },
+          "collection": "top_played_tracks",
+          "format": "table",
+          "query": "{}"
+        }
+      ],
+      "columns": [
+        { "text": "track_id", "type": "string" },
+        { "text": "play_count", "type": "number" }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 }
+    },
+    {
+      "type": "table",
+      "title": "Top Skipped Tracks",
+      "datasource": "MongoDB",
+      "targets": [
         {
           "refId": "B",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
-          "collection": "user_stats",
-          "isPipeline": true,
-          "pipeline": "[{\"$group\":{\"_id\":{\"$dateToString\":{\"format\":\"%Y-%m-%d\",\"date\":\"$timestamp\"}},\"value\":{\"$sum\":\"$tracks_skipped\"}}},{\"$sort\":{\"_id\":1}}]",
-          "format": "time_series"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "decimals": 0,
-          "color": { "mode": "palette-classic" }
-        },
-        "overrides": []
-      }
-    },
-    {
-      "type": "barchart",
-      "title": "Top 10 Played Tracks (7 дней)",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
-      "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
-          "collection": "top_played_tracks",
-          "isPipeline": true,
-          "pipeline": "[{\"$match\":{\"timestamp\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",604800000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"totalPlays\":{\"$sum\":\"$play_count\"}}},{\"$sort\":{\"totalPlays\":-1}},{\"$limit\":10}]",
-          "format": "table"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      }
-    },
-    {
-      "type": "barchart",
-      "title": "Top 10 Skipped Tracks (7 дней)",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
-      "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
           "collection": "top_skipped_tracks",
-          "isPipeline": true,
-          "pipeline": "[{\"$match\":{\"timestamp\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",604800000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"totalSkips\":{\"$sum\":\"$skip_count\"}}},{\"$sort\":{\"totalSkips\":-1}},{\"$limit\":10}]",
-          "format": "table"
+          "format": "table",
+          "query": "{}"
         }
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      }
+      "columns": [
+        { "text": "track_id", "type": "string" },
+        { "text": "skip_count", "type": "number" }
+      ],
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 }
     },
     {
-      "type": "heatmap",
-      "title": "Top Genres per Day (30 дней)",
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
-      "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+      "type": "barchart",
+      "title": "Top Genres by Day",
+      "datasource": "MongoDB",
       "targets": [
         {
-          "refId": "A",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
+          "refId": "C",
           "collection": "top_genres_day",
-          "isPipeline": true,
-          "pipeline": "[{\"$match\":{\"date\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",2592000000]}}}}},{\"$group\":{\"_id\":{\"genre\":\"$genre_id\",\"day\":\"$date\"},\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"_id.day\":1}}]",
-          "format": "table"
+          "format": "table",
+          "query": "{}"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "none",
-          "decimals": 0,
-          "color": { "mode": "spectrum" }
-        },
-        "overrides": []
+          "displayName": "Plays"
+        }
       },
       "options": {
-        "XBucketSize": null,
-        "showYAxis": true,
-        "showXAxis": true,
-        "showLegend": true
-      }
+        "orientation": "horizontal",
+        "xField": "genre_id",
+        "yField": "plays"
+      },
+      "gridPos": { "x": 0, "y": 8, "w": 8, "h": 8 }
     },
     {
       "type": "barchart",
-      "title": "Top 10 Genres (7 дней)",
-      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
-      "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+      "title": "Top Genres by Week",
+      "datasource": "MongoDB",
       "targets": [
         {
-          "refId": "A",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
+          "refId": "D",
           "collection": "top_genres_week",
-          "isPipeline": true,
-          "pipeline": "[{\"$match\":{\"week\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",604800000]}}}}},{\"$group\":{\"_id\":\"$genre_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
-          "format": "table"
+          "format": "table",
+          "query": "{}"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "none",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      }
-    },
-    {
-      "type": "barchart",
-      "title": "Top 10 Genres (30 дней)",
-      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
-      "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
-          "collection": "top_genres_month",
-          "isPipeline": true,
-          "pipeline": "[{\"$match\":{\"month\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",2592000000]}}}}},{\"$group\":{\"_id\":\"$genre_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
-          "format": "table"
+          "displayName": "Plays"
         }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "decimals": 0
-        },
-        "overrides": []
       },
       "options": {
         "orientation": "horizontal",
-        "showValue": "auto",
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      }
-    },
-    {
-      "type": "barchart",
-      "title": "Top 10 Tracks (30 дней)",
-      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
-      "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
-          "collection": "top_tracks_day",
-          "isPipeline": true,
-          "pipeline": "[{\"$match\":{\"date\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",2592000000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
-          "format": "table"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "decimals": 0
-        },
-        "overrides": []
+        "xField": "genre_id",
+        "yField": "plays"
       },
-      "options": {
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      }
+      "gridPos": { "x": 8, "y": 8, "w": 8, "h": 8 }
     },
     {
       "type": "barchart",
-      "title": "Top 10 Tracks (7 дней)",
-      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
-      "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
+      "title": "Top Tracks This Month",
+      "datasource": "MongoDB",
       "targets": [
         {
-          "refId": "A",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
-          "collection": "top_tracks_week",
-          "isPipeline": true,
-          "pipeline": "[{\"$match\":{\"week\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",604800000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
-          "format": "table"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      }
-    },
-    {
-      "type": "barchart",
-      "title": "Top 10 Tracks (30 дней)",
-      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
-      "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "grafana-mongodb-datasource", "uid": "MongoDB" },
-          "database": "db",
+          "refId": "E",
           "collection": "top_tracks_month",
-          "isPipeline": true,
-          "pipeline": "[{\"$match\":{\"month\":{\"$gte\":{\"$date\":{\"$subtract\":[\"$$NOW\",2592000000]}}}}},{\"$group\":{\"_id\":\"$track_id\",\"total\":{\"$sum\":\"$plays\"}}},{\"$sort\":{\"total\":-1}},{\"$limit\":10}]",
-          "format": "table"
+          "format": "table",
+          "query": "{}"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "none",
-          "decimals": 0
-        },
-        "overrides": []
+          "displayName": "Plays"
+        }
       },
       "options": {
         "orientation": "horizontal",
-        "showValue": "auto",
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      }
+        "xField": "track_id",
+        "yField": "plays"
+      },
+      "gridPos": { "x": 0, "y": 16, "w": 8, "h": 8 }
+    },
+    {
+      "type": "table",
+      "title": "User Listening Stats",
+      "datasource": "MongoDB",
+      "targets": [
+        {
+          "refId": "F",
+          "collection": "user_stats",
+          "format": "table",
+          "query": "{}"
+        }
+      ],
+      "columns": [
+        { "text": "user_id", "type": "string" },
+        { "text": "tracks_listened", "type": "number" },
+        { "text": "tracks_skipped", "type": "number" }
+      ],
+      "gridPos": { "x": 8, "y": 16, "w": 8, "h": 8 }
     }
-  ]
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": ["10s", "30s", "1m", "5m", "15m"]
+  }
 }

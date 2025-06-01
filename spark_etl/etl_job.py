@@ -9,7 +9,6 @@ from pyspark.sql.functions import (
 from pyspark.sql.window import Window
 from datetime import datetime, timedelta
 
-
 yesterday = (datetime.utcnow() - timedelta(days=1)).isoformat()
 
 driver = "org.postgresql.Driver"
@@ -113,7 +112,6 @@ top_played = (
     .agg(count("*").alias("play_count"))
     .orderBy(col("play_count").desc())
 )
-
 top_skipped = (
     activity_df.filter(col("event") == "skip")
     .groupBy("track_id")
