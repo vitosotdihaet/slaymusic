@@ -160,7 +160,7 @@ async def login(
     except UserNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    if not account_service.verify_password(login_user.password, user.password):
+    if not await account_service.verify_password(login_user.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials"
         )

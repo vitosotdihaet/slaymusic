@@ -114,7 +114,7 @@ async def stream_track(
         raise HTTPException(
             status_code=status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE, detail=str(e)
         )
-    except TrackNotFoundException as e:
+    except (TrackNotFoundException, MusicFileNotFoundException) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
     return StreamingResponse(

@@ -36,3 +36,7 @@ class PlaylistTrackNotFoundException(AccountsBaseException):
 
 class PlaylistAlreadyExist(AccountsBaseException):
     pass
+
+
+class PlaylistFavDeletion(AccountsBaseException):
+    pass

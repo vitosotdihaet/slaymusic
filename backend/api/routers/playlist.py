@@ -30,6 +30,7 @@ from exceptions.accounts import (
     PlaylistNotFoundException,
     PlaylistTrackNotFoundException,
     PlaylistAlreadyExist,
+    PlaylistFavDeletion,
 )
 from exceptions.music import ImageFileNotFoundException, TrackNotFoundException
 
@@ -151,6 +152,8 @@ async def delete_playlist(
         await accounts_service.delete_playlist(playlist_id)
     except PlaylistNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except PlaylistFavDeletion as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
 
 
 @router.delete("/image/", status_code=status.HTTP_204_NO_CONTENT)
