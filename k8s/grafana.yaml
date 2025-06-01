@@ -21,7 +21,6 @@ kind: ConfigMap
 metadata:
   name: grafana-provisioning
 data:
-
   dashboards.yaml: |
     apiVersion: 1
     providers:

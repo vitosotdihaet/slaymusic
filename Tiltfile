@@ -69,7 +69,7 @@ k8s_resource(
 k8s_resource(
     'grafana',
     port_forwards=[
-        env_vars['GRAFANA_PORT']
+        env_vars['GRAFANA_PORT']+':3000'
     ], resource_deps=['prometheus']
 )
 
