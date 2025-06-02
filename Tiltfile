@@ -18,6 +18,8 @@ yaml_files = [
     'k8s/mongo-user-activity.yaml',
     'k8s/redis-track-queue.yaml',
     'k8s/redis-track-queue-config.yaml',
+    'k8s/mongo-dwh.yaml',
+    'k8s/cronjob-spark-etl.yaml',
     'k8s/prometheus.yaml',
     'k8s/grafana.yaml',
 ]
@@ -29,34 +31,13 @@ for file in yaml_files:
     k8s_yaml(blob(yaml_content))
 
 k8s_resource(
-    'setup-job',
+    'spark-etl',
     resource_deps=[
-        'minio',
-        'postgres-music',
-        'redis-track-queue',
-    ],
-)
-
-# Set up port forwarding
-k8s_resource(
-    'slaymusic-backend',
-    port_forwards=[
-        make_port_forward('BACKEND_PORT')
-    ],
-    resource_deps=[
-        'minio',
         'postgres-music',
         'mongodb-user-activity',
-        'redis-track-queue',
-        'setup-job'
-    ]
-)
-
-k8s_resource(
-    'minio',
-    port_forwards=[
-        env_vars['MINIO_WEBUI_PORT']+':9001'
-    ]
+        "mongodb-dwh"
+    ],
+    pod_readiness="ignore"
 )
 
 k8s_resource(
@@ -69,8 +50,29 @@ k8s_resource(
 k8s_resource(
     'grafana',
     port_forwards=[
-        env_vars['GRAFANA_PORT']+':3000'
+        env_vars['GRAFANA_PORT']
     ], resource_deps=['prometheus']
+)
+# Set up port forwarding
+k8s_resource(
+    'slaymusic-backend',
+    port_forwards=[
+        make_port_forward('BACKEND_PORT')
+    ],
+    resource_deps=[
+        'minio',
+        'postgres-music',
+        'mongodb-user-activity',
+        'redis-track-queue',
+        'setup-job',
+    ]
+)
+
+k8s_resource(
+    'minio',
+    port_forwards=[
+        env_vars['MINIO_WEBUI_PORT']+':9001'
+    ]
 )
 
 # Docker build configuration
@@ -86,11 +88,17 @@ docker_build(
             trigger='./backend/requirements.txt'),
     ]
 )
-
 docker_build(
     'slaymusic-setup-job-image',
     '.',
     dockerfile='./backend/dockerfile',
     build_args={'BACKEND_PORT': env_vars['BACKEND_PORT']},
     only=['backend', '.env']
+)
+
+docker_build(
+  'spark-etl',
+  '.',
+  dockerfile='./spark_etl/dockerfile',
+  only=['spark_etl', '.env']
 )
