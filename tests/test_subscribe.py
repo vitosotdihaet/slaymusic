@@ -14,11 +14,11 @@ class TestUserEndpoints:
             "username": username,
             "password": "testpass",
         }
-        response = await client.post("/user/register/", params=register_data)
+        response = await client.post("/user/register/", json=register_data)
         if response.status_code != status.HTTP_201_CREATED:
             response = await client.post(
                 "/user/login/",
-                params={"username": username, "password": "testpass"},
+                json={"username": username, "password": "testpass"},
             )
 
         token = response.json()["token"]
@@ -42,8 +42,7 @@ class TestUserEndpoints:
         }
         resp_reg = await async_client.post(
             "/user/register/",
-            params=user_data,
-            files={"cover_file": ("", "", "")},
+            json=user_data,
         )
         assert resp_reg.status_code == status.HTTP_201_CREATED, (
             f"Failed to register user: {resp_reg.text}"

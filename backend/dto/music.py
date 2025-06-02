@@ -117,6 +117,7 @@ class AlbumSearchParams(MusicSearchParams):
 
 class TrackSearchParams(MusicSearchParams):
     artist_id: int | None = None
+    playlist_id: int | None = None
     album_id: int | None = None
     genre_id: int | None = None
     release_search_start: date | None = None
