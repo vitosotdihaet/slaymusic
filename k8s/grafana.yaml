@@ -23,11 +23,13 @@ data:
         access: proxy
         url: ""
         jsonData:
-          uri: "mongodb://$DWH_ROOT_PASSWORD@mongodb-dwh-service/DWH_PORT"
-          authSource: "admin"
-          tlsSkipVerify: true
+          host: mongodb-dwh-service
+          port: $DWH_PORT
+          database: dwh
+          authType: auth-username-password
+          username: $DWH_ROOT_USER
         secureJsonData:
-          connectionString: "mongodb://$DWH_ROOT_PASSWORD@mongodb-dwh-service/DWH_PORT"
+          password: $DWH_ROOT_PASSWORD
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -1101,158 +1103,172 @@ data:
    }
   dashboard_analytics.json: |-
     {
-      "id": null,
-      "uid": "music-analytics-dashboard",
-      "title": "Music Analytics Dashboard",
-      "timezone": "browser",
-      "schemaVersion": 36,
-      "version": 1,
-      "refresh": "10s",
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": 3,
+      "links": [],
       "panels": [
         {
-          "type": "table",
-          "title": "Top Played Tracks",
-          "datasource": "MongoDB",
-          "targets": [
-            {
-              "refId": "A",
-              "collection": "top_played_tracks",
-              "format": "table",
-              "query": "{}"
-            }
-          ],
-          "columns": [
-            { "text": "track_id", "type": "string" },
-            { "text": "play_count", "type": "number" }
-          ],
-          "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 }
-        },
-        {
-          "type": "table",
-          "title": "Top Skipped Tracks",
-          "datasource": "MongoDB",
-          "targets": [
-            {
-              "refId": "B",
-              "collection": "top_skipped_tracks",
-              "format": "table",
-              "query": "{}"
-            }
-          ],
-          "columns": [
-            { "text": "track_id", "type": "string" },
-            { "text": "skip_count", "type": "number" }
-          ],
-          "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 }
-        },
-        {
-          "type": "barchart",
-          "title": "Top Genres by Day",
-          "datasource": "MongoDB",
-          "targets": [
-            {
-              "refId": "C",
-              "collection": "top_genres_day",
-              "format": "table",
-              "query": "{}"
-            }
-          ],
+          "datasource": {
+            "type": "haohanyang-mongodb-datasource",
+            "uid": "P91231FF9AB6685FA"
+          },
           "fieldConfig": {
             "defaults": {
-              "unit": "none",
-              "displayName": "Plays"
-            }
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
           },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 0
+          },
+          "id": 2,
           "options": {
-            "orientation": "horizontal",
-            "xField": "genre_id",
-            "yField": "plays"
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
-          "gridPos": { "x": 0, "y": 8, "w": 8, "h": 8 }
-        },
-        {
-          "type": "barchart",
-          "title": "Top Genres by Week",
-          "datasource": "MongoDB",
+          "pluginVersion": "12.0.1",
           "targets": [
             {
-              "refId": "D",
-              "collection": "top_genres_week",
-              "format": "table",
-              "query": "{}"
+              "collection": "users",
+              "datasource": {
+                "type": "haohanyang-mongodb-datasource",
+                "uid": "P91231FF9AB6685FA"
+              },
+              "isStreaming": false,
+              "queryLanguage": "json",
+              "queryText": "   [\n  {\n    \"$count\": \"totalUsers\"\n  }\n]",
+              "queryType": "table",
+              "refId": "A"
             }
           ],
+          "title": "Total users",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "haohanyang-mongodb-datasource",
+            "uid": "P91231FF9AB6685FA"
+          },
           "fieldConfig": {
             "defaults": {
-              "unit": "none",
-              "displayName": "Plays"
-            }
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
           },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 0
+          },
+          "id": 1,
           "options": {
-            "orientation": "horizontal",
-            "xField": "genre_id",
-            "yField": "plays"
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
-          "gridPos": { "x": 8, "y": 8, "w": 8, "h": 8 }
-        },
-        {
-          "type": "barchart",
-          "title": "Top Tracks This Month",
-          "datasource": "MongoDB",
+          "pluginVersion": "12.0.1",
           "targets": [
             {
-              "refId": "E",
-              "collection": "top_tracks_month",
-              "format": "table",
-              "query": "{}"
+              "collection": "tracks",
+              "datasource": {
+                "type": "haohanyang-mongodb-datasource",
+                "uid": "P91231FF9AB6685FA"
+              },
+              "isStreaming": false,
+              "queryLanguage": "json",
+              "queryText": "[\n  {\n    \"$count\": \"totalTracks\"\n  }\n]",
+              "queryType": "table",
+              "refId": "A"
             }
           ],
-          "fieldConfig": {
-            "defaults": {
-              "unit": "none",
-              "displayName": "Plays"
-            }
-          },
-          "options": {
-            "orientation": "horizontal",
-            "xField": "track_id",
-            "yField": "plays"
-          },
-          "gridPos": { "x": 0, "y": 16, "w": 8, "h": 8 }
-        },
-        {
-          "type": "table",
-          "title": "User Listening Stats",
-          "datasource": "MongoDB",
-          "targets": [
-            {
-              "refId": "F",
-              "collection": "user_stats",
-              "format": "table",
-              "query": "{}"
-            }
-          ],
-          "columns": [
-            { "text": "user_id", "type": "string" },
-            { "text": "tracks_listened", "type": "number" },
-            { "text": "tracks_skipped", "type": "number" }
-          ],
-          "gridPos": { "x": 8, "y": 16, "w": 8, "h": 8 }
+          "title": "Track count",
+          "type": "stat"
         }
       ],
+      "preload": false,
+      "schemaVersion": 41,
+      "tags": [],
       "templating": {
         "list": []
       },
-      "annotations": {
-        "list": []
-      },
       "time": {
-        "from": "now-30d",
+        "from": "now-5m",
         "to": "now"
       },
-      "timepicker": {
-        "refresh_intervals": ["10s", "30s", "1m", "5m", "15m"]
-      }
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "ETL Statistics",
+      "uid": "31c1ebc7-11a5-4c22-84f0-d37d95b1533c",
+      "version": 1
     }
 ---
 apiVersion: apps/v1
