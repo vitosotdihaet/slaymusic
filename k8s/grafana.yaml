@@ -15,6 +15,21 @@ data:
         isDefault: true
         editable: true
         uid: prometheus-ds
+  mongo-dwh.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: MongoDB
+        type: haohanyang-mongodb-datasource
+        access: proxy
+        url: ""
+        jsonData:
+          host: mongodb-dwh-service
+          port: $DWH_PORT
+          database: dwh
+          authType: auth-username-password
+          username: $DWH_ROOT_USER
+        secureJsonData:
+          password: $DWH_ROOT_PASSWORD
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -1086,6 +1101,534 @@ data:
     "uid": "fastapi-observability",
     "version": 1
    }
+  dashboard_analytics.json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": 2,
+      "links": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "haohanyang-mongodb-datasource",
+            "uid": "P91231FF9AB6685FA"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 0,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.0.1",
+          "targets": [
+            {
+              "collection": "users",
+              "datasource": {
+                "type": "haohanyang-mongodb-datasource",
+                "uid": "P91231FF9AB6685FA"
+              },
+              "isStreaming": false,
+              "queryLanguage": "json",
+              "queryText": "   [\n  {\n    \"$count\": \"totalUsers\"\n  }\n]",
+              "queryType": "table",
+              "refId": "A"
+            }
+          ],
+          "title": "Total users",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "haohanyang-mongodb-datasource",
+            "uid": "P91231FF9AB6685FA"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 4,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.0.1",
+          "targets": [
+            {
+              "collection": "tracks",
+              "datasource": {
+                "type": "haohanyang-mongodb-datasource",
+                "uid": "P91231FF9AB6685FA"
+              },
+              "isStreaming": false,
+              "queryLanguage": "json",
+              "queryText": "[\n  {\n    \"$count\": \"totalTracks\"\n  }\n]",
+              "queryType": "table",
+              "refId": "A"
+            }
+          ],
+          "title": "Track count",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "haohanyang-mongodb-datasource",
+            "uid": "P91231FF9AB6685FA"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 0,
+              "mappings": [],
+              "min": 0,
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 0
+          },
+          "id": 3,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "12.0.1",
+          "targets": [
+            {
+              "collection": "activities",
+              "datasource": {
+                "type": "haohanyang-mongodb-datasource",
+                "uid": "P91231FF9AB6685FA"
+              },
+              "isStreaming": false,
+              "queryLanguage": "json",
+              "queryText": "[\n  {\n    \"$match\": {\n      \"event\": \"play\"\n    }\n  },\n  {\n    \"$group\": {\n      \"_id\": {\n        \"$dateTrunc\": {\n          \"date\": \"$time\",\n          \"unit\": \"minute\"\n        }\n      },\n      \"count\": { \"$sum\": 1 }\n    }\n  },\n  {\n    \"$sort\": {\n      \"_id\": 1\n    }\n  }\n]\n",
+              "queryType": "table",
+              "refId": "A"
+            }
+          ],
+          "title": "New activities per minute",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "haohanyang-mongodb-datasource",
+            "uid": "P91231FF9AB6685FA"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 0,
+            "y": 8
+          },
+          "id": 5,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.0.1",
+          "targets": [
+            {
+              "collection": "top_tracks_day",
+              "datasource": {
+                "type": "haohanyang-mongodb-datasource",
+                "uid": "P91231FF9AB6685FA"
+              },
+              "isStreaming": false,
+              "queryLanguage": "json",
+              "queryText": "[\n  {\n    \"$group\": {\n      \"_id\": \"$track_id\",\n      \"total_plays\": { \"$sum\": \"$plays\" }\n    }\n  },\n  {\n    \"$sort\": {\n      \"total_plays\": -1\n    }\n  },\n  {\n    \"$limit\": 1\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"total_plays\": 1\n    }\n  }\n]\n",
+              "queryType": "table",
+              "refId": "A"
+            }
+          ],
+          "title": "Today's most played track's play count",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "haohanyang-mongodb-datasource",
+            "uid": "P91231FF9AB6685FA"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 4,
+            "y": 8
+          },
+          "id": 7,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.0.1",
+          "targets": [
+            {
+              "collection": "top_genres_week",
+              "datasource": {
+                "type": "haohanyang-mongodb-datasource",
+                "uid": "P91231FF9AB6685FA"
+              },
+              "isStreaming": false,
+              "queryLanguage": "json",
+              "queryText": "[\n  {\n    \"$group\": {\n      \"_id\": \"$track_id\",\n      \"total_plays\": { \"$sum\": \"$plays\" }\n    }\n  },\n  {\n    \"$sort\": {\n      \"total_plays\": -1\n    }\n  },\n  {\n    \"$limit\": 1\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"total_plays\": 1\n    }\n  }\n]\n",
+              "queryType": "table",
+              "refId": "A"
+            }
+          ],
+          "title": "This week's most played track's play count",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "haohanyang-mongodb-datasource",
+            "uid": "P91231FF9AB6685FA"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 8,
+            "y": 8
+          },
+          "id": 6,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "12.0.1",
+          "targets": [
+            {
+              "collection": "top_tracks_month",
+              "datasource": {
+                "type": "haohanyang-mongodb-datasource",
+                "uid": "P91231FF9AB6685FA"
+              },
+              "isStreaming": false,
+              "queryLanguage": "json",
+              "queryText": "[\n  {\n    \"$group\": {\n      \"_id\": \"$track_id\",\n      \"total_plays\": { \"$sum\": \"$plays\" }\n    }\n  },\n  {\n    \"$sort\": {\n      \"total_plays\": -1\n    }\n  },\n  {\n    \"$limit\": 1\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"total_plays\": 1\n    }\n  }\n]\n",
+              "queryType": "table",
+              "refId": "A"
+            }
+          ],
+          "title": "This month's most played track's play count",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "haohanyang-mongodb-datasource",
+            "uid": "P91231FF9AB6685FA"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "fixedColor": "semi-dark-green",
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 12,
+            "y": 8
+          },
+          "id": 4,
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "12.0.1",
+          "targets": [
+            {
+              "collection": "activities",
+              "datasource": {
+                "type": "haohanyang-mongodb-datasource",
+                "uid": "P91231FF9AB6685FA"
+              },
+              "isStreaming": false,
+              "queryLanguage": "json",
+              "queryText": "[\n  {\n    \"$group\": {\n      \"_id\": \"$event\",\n      \"count\": { \"$sum\": 1 }\n    }\n  }\n]",
+              "queryType": "table",
+              "refId": "A"
+            }
+          ],
+          "title": "Activity events",
+          "type": "piechart"
+        }
+      ],
+      "preload": false,
+      "schemaVersion": 41,
+      "tags": [],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-5m",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "ETL Statistics",
+      "uid": "31c1ebc7-11a5-4c22-84f0-d37d95b1533c",
+      "version": 1
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1101,19 +1644,40 @@ spec:
       labels:
         app: grafana
     spec:
+      terminationGracePeriodSeconds: 60
       containers:
         - name: grafana
-          image: grafana/grafana
+          image: grafana/grafana:latest
           ports:
             - containerPort: 3000
+          command:
+            - sh
+            - -c
+            - |
+              cd /var/lib/grafana/plugins
+              wget -O plugin.zip https://github.com/haohanyang/mongodb-datasource/releases/download/v0.3.2/haohanyang-mongodb-datasource-0.3.2.zip
+              unzip plugin.zip -d .
+              rm plugin.zip
+              find haohanyang-mongodb-datasource -type f -name "gpx_mongodb_datasource_*" -exec chmod +x {} \;
+              exec /run.sh
           env:
+          - name: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
+            value: "haohanyang-mongodb-datasource"
           - name: GF_SECURITY_ADMIN_USER
             value: $GRAFANA_ADMIN
           - name: GF_SECURITY_ADMIN_PASSWORD
             value: $GRAFANA_PASSWORD
           - name: GF_PATHS_PROVISIONING
             value: /etc/grafana/provisioning
+          - name: DWH_ROOT_USER
+            value: $DWH_ROOT_USER
+          - name: DWH_ROOT_PASSWORD
+            value: $DWH_ROOT_PASSWORD
+          - name: DWH_PORT
+            value: "$DWH_PORT"
           volumeMounts:
+            - name: grafana-plugins
+              mountPath: /var/lib/grafana/plugins
             - name: grafana-storage
               mountPath: /var/lib/grafana
             - name: grafana-datasource
@@ -1121,6 +1685,8 @@ spec:
             - name: grafana-provisioning
               mountPath: /etc/grafana/provisioning/dashboards
       volumes:
+        - name: grafana-plugins
+          emptyDir: {}
         - name: grafana-storage
           emptyDir: {}
         - name: grafana-datasource

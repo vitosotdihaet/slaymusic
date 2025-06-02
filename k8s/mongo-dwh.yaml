@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-dwh-pvc
+  annotations:
+    tilt.dev/down-policy: keep
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-dwh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb-dwh
+  template:
+    metadata:
+      labels:
+        app: mongodb-dwh
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:7
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: $DWH_ROOT_USER
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: $DWH_ROOT_PASSWORD
+            - name: MONGO_INITDB_DATABASE
+              value: $DWH_ROOT_DB
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongodb-storage
+              mountPath: /data/db
+          livenessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - "db.adminCommand('ping')"
+            periodSeconds: 60
+            timeoutSeconds: 2
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - "db.adminCommand('ping')"
+            periodSeconds: 60
+            timeoutSeconds: 2
+          startupProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - "db.adminCommand('ping')"
+            failureThreshold: 50
+            periodSeconds: 3
+      volumes:
+        - name: mongodb-storage
+          persistentVolumeClaim:
+            claimName: mongodb-dwh-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-dwh-service
+spec:
+  selector:
+    app: mongodb-dwh
+  ports:
+    - protocol: TCP
+      name: db
+      port: $DWH_PORT
+      targetPort: 27017
+  type: NodePort

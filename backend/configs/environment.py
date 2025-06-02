@@ -33,8 +33,12 @@ class Settings(BaseSettings):
     AUTH_ADMIN_SECRET_KEY: str
     AUTH_ACCESS_TOKEN_EXPIRED_MINUTES: int
 
+    DWH_ROOT_USER: str
+    DWH_ROOT_PASSWORD: str
+    DWH_DB: str
+    DWH_PORT: int
     PROMETHEUS_PORT: int
-    
+
     GRAFANA_PORT: int
     GRAFANA_ADMIN: str
     GRAFANA_PASSWORD: str
