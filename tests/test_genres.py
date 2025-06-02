@@ -20,20 +20,15 @@ class TestGenreEndpoints:
             "username": username,
             "password": password,
         }
-        response = await client.post("/user/register/", params=register_data)
+        response = await client.post("/user/register/", json=register_data)
         if response.status_code != status.HTTP_201_CREATED:
             response = await client.post(
                 "/user/login/",
-                params={"username": username, "password": password},
+                json={"username": username, "password": password},
             )
 
         token = response.json()["token"]
         return {"Authorization": f"Bearer {token}", "username": username}
-
-    async def _upgrade_user(self, client: AsyncClient, headers):
-        resp = await client.put("/user/", params={"role": "admin"}, headers=headers)
-        assert resp.status_code == status.HTTP_200_OK
-        return resp
 
     async def _delete_user(self, client: AsyncClient, headers):
         resp = await client.delete("/user/", headers=headers)

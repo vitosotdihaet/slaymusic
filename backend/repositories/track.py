@@ -60,6 +60,21 @@ class SQLAlchemyTrackRepository(ITrackRepository, RepositoryHelpers):
         async with self.session_factory() as session:
             query = select(TrackModel)
 
+            if params.name:
+                search_name = params.name.strip().lower()
+                starts_with = TrackModel.name.ilike(f"{search_name}%")
+                contains = TrackModel.name.ilike(f"%{search_name}%")
+                similarity = None
+                if len(search_name) > 3:
+                    similarity = func.similarity(TrackModel.name, search_name) > 0.1
+                query = query.filter(starts_with | contains | similarity)
+
+                query = query.order_by(
+                    starts_with.desc(),
+                    contains.desc(),
+                    func.similarity(TrackModel.name, search_name).desc(),
+                )
+
             if params.playlist_id:
                 query = query.join(
                     PlaylistTrackModel, PlaylistTrackModel.track_id == TrackModel.id
@@ -110,21 +125,6 @@ class SQLAlchemyTrackRepository(ITrackRepository, RepositoryHelpers):
                 if not model:
                     raise GenreNotFoundException(f"Genre '{params.genre_id}' not found")
                 query = query.where(TrackModel.genre_id == params.genre_id)
-
-            if params.name:
-                search_name = params.name.strip().lower()
-                starts_with = TrackModel.name.ilike(f"{search_name}%")
-                contains = TrackModel.name.ilike(f"%{search_name}%")
-                similarity = None
-                if len(search_name) > 3:
-                    similarity = func.similarity(TrackModel.name, search_name) > 0.1
-                query = query.filter(starts_with | contains | similarity)
-
-                query = query.order_by(
-                    starts_with.desc(),
-                    contains.desc(),
-                    func.similarity(TrackModel.name, search_name).desc(),
-                )
 
             query = query.offset(params.skip).limit(params.limit)
             models = await self._get_all(query, session)
