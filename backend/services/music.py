@@ -99,7 +99,7 @@ class MusicService:
         if start >= file_byte_size:
             raise InvalidStartException()
 
-        end = min(end, file_byte_size - 1)
+        end = min(end, file_byte_size - 1, start + 1024*1024)
         content_length = end - start + 1
 
         stream = self.music_file_repository.stream_track(track, start, end)

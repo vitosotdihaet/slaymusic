@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     GRAFANA_ADMIN: str
     GRAFANA_PASSWORD: str
 
+    FRONTEND_PORT: int
+    VUE_APP_BACKEND_URL: str
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

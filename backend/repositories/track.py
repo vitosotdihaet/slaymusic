@@ -4,6 +4,8 @@ from repositories.helpers import RepositoryHelpers
 from models.track import TrackModel
 from models.album import AlbumModel
 from models.genre import GenreModel
+from models.playlist import PlaylistModel
+from models.playlist_track import PlaylistTrackModel
 from models.user import UserModel
 from exceptions.music import (
     AlbumNotFoundException,
@@ -58,6 +60,14 @@ class SQLAlchemyTrackRepository(ITrackRepository, RepositoryHelpers):
     async def get_tracks(self, params: TrackSearchParams) -> list[Track]:
         async with self.session_factory() as session:
             query = select(TrackModel)
+            
+            if params.playlist_id:
+                query = query.join(
+                    PlaylistTrackModel,
+                    PlaylistTrackModel.track_id == TrackModel.id
+                ).where(
+                    PlaylistTrackModel.playlist_id == params.playlist_id
+                )
 
             if params.artist_id:
                 model = await self._get_one_or_none(
@@ -106,9 +116,19 @@ class SQLAlchemyTrackRepository(ITrackRepository, RepositoryHelpers):
                 query = query.where(TrackModel.genre_id == params.genre_id)
 
             if params.name:
-                query = query.filter(
-                    func.similarity(TrackModel.name, params.name) >= params.threshold
-                ).order_by(func.similarity(TrackModel.name, params.name).desc())
+                search_name = params.name.strip().lower()
+                starts_with = TrackModel.name.ilike(f"{search_name}%")
+                contains = TrackModel.name.ilike(f"%{search_name}%")
+                similarity = None
+                if len(search_name) > 3:
+                    similarity = func.similarity(TrackModel.name, search_name) > 0.1
+                query = query.filter(starts_with | contains | similarity)
+                
+                query = query.order_by(
+                    starts_with.desc(),
+                    contains.desc(),
+                    func.similarity(TrackModel.name, search_name).desc()
+                )
 
             query = query.offset(params.skip).limit(params.limit)
             models = await self._get_all(query, session)
